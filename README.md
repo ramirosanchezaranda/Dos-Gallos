@@ -49,15 +49,15 @@ Solo peso, precio por kilo e importe. Por eso el flujo es:
 
 ### Por qué el producto se elige a mano
 
-Al cargar el catálogo real quedaron **7 precios compartidos por 17 productos**:
+Al cargar el catálogo real quedaron **7 precios compartidos por 18 productos**:
 
 | Precio | Productos |
 |---|---|
 | $12.000 | Chorizo · Papas caritas · Papas noisette · Salchichón Viena |
-| $9.500 | Cortes de jamón · Mila de soja · Morcilla |
-| $4.900 | Pollo entero · Provoleta |
-| $8.300 | Costillitas · Pechito de cerdo |
-| $9.900 | Bondiola · Medallones (Espinaca/JyQ) |
+| $9.500 | Cortes de jamón · Mila de soja y espinaca · Morcilla |
+| $4.900 | Pata y muslo · Pollo entero · Provoleta |
+| $8.300 | Costillitas de cerdo · Pechito de cerdo |
+| $9.900 | Bondiola · Medallones (Espinaca / JyQ) |
 | $11.000 | Hamburguesa de pollo · Nuggets (Granjys) |
 | $13.000 | Arrollado de pollo · Matambre |
 
