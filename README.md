@@ -3,6 +3,9 @@
 App web (PWA) para la pollería Dos Gallos: carga de ventas leyendo el ticket
 de la balanza, control de stock, gastos, facturas y pendientes.
 
+**En producción: https://dos-gallos.vercel.app** — Vercel redeploya solo con
+cada push a `claude/poultry-stock-system-s0i9p7`, que es la rama principal.
+
 ## Arrancar
 
 ```bash
