@@ -2,10 +2,21 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from '
 import type { Session } from '@supabase/supabase-js'
 import { supabase } from '../lib/supabase'
 
+/**
+ * Supabase necesita un identificador además de la contraseña, pero en el
+ * mostrador escribir el mail cada vez es tiempo perdido: hay un solo usuario.
+ * Así que el identificador queda fijo acá y la pantalla pide solo la clave.
+ *
+ * Es a propósito uno neutro y no un mail personal: este archivo vive en un
+ * repositorio público. El TLD `.invalid` está reservado por RFC 2606, no se
+ * puede registrar, así que nunca va a haber una casilla real detrás.
+ */
+const USUARIO = 'mostrador@dosgallos.invalid'
+
 interface AuthCtx {
   session: Session | null
   cargando: boolean
-  ingresar: (email: string, password: string) => Promise<void>
+  ingresar: (password: string) => Promise<void>
   salir: () => Promise<void>
   cambiarPassword: (nueva: string) => Promise<void>
 }
@@ -25,12 +36,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => sub.subscription.unsubscribe()
   }, [])
 
-  const ingresar = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
+  const ingresar = async (password: string) => {
+    const { error } = await supabase.auth.signInWithPassword({ email: USUARIO, password })
     if (error) {
       throw new Error(
         error.message === 'Invalid login credentials'
-          ? 'Email o contraseña incorrectos'
+          ? 'Contraseña incorrecta'
           : error.message,
       )
     }

@@ -144,6 +144,16 @@ proveedores · gastos · facturas
 tareas
 ```
 
+El login pide **solo la contraseña**: hay un único usuario y escribir el mail
+en cada turno es tiempo perdido en el mostrador. Supabase igual necesita un
+identificador, así que queda fijo en `useAuth.tsx`. Es uno neutro,
+`mostrador@dosgallos.invalid`, y no un mail personal, porque este repositorio
+es público; `.invalid` está reservado por RFC 2606 y no se puede registrar.
+
+Sacar el campo no debilita nada: el mail nunca fue el secreto. Pero ahora la
+contraseña es lo único que separa a cualquiera de la caja, así que conviene que
+sea larga.
+
 RLS activo en todas las tablas. No alcanza con estar autenticado: hay que
 figurar en `miembros`, que se carga a mano desde el panel de Supabase. La app
 está en una URL pública, así que registrarse por su cuenta no da acceso a nada.

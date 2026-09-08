@@ -3,7 +3,6 @@ import { useAuth } from '../hooks/useAuth'
 
 export default function Login() {
   const { ingresar } = useAuth()
-  const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [cargando, setCargando] = useState(false)
@@ -13,7 +12,7 @@ export default function Login() {
     setError(null)
     setCargando(true)
     try {
-      await ingresar(email.trim(), password)
+      await ingresar(password)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'No se pudo ingresar')
     } finally {
@@ -34,25 +33,14 @@ export default function Login() {
 
         <form onSubmit={enviar} className="bg-hueso rounded-2xl p-5 space-y-3">
           <label className="block">
-            <span className="text-xs text-verde-700 font-medium">Email</span>
-            <input
-              type="email"
-              autoComplete="username"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full mt-1 border border-verde-200 rounded-lg px-3 py-2.5 text-base"
-              required
-            />
-          </label>
-
-          <label className="block">
             <span className="text-xs text-verde-700 font-medium">Contraseña</span>
             <input
               type="password"
               autoComplete="current-password"
+              autoFocus
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full mt-1 border border-verde-200 rounded-lg px-3 py-2.5 text-base"
+              className="w-full mt-1 border border-verde-200 rounded-lg px-3 py-2.5 text-base text-center tracking-widest"
               required
             />
           </label>
