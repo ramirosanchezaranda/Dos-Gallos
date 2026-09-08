@@ -29,6 +29,10 @@ export interface Producto {
   unidad: Unidad
   /** $/kg o $/unidad. Es la clave con la que se identifica el producto en el ticket. */
   precio: number
+  /** Precio unitario cuando se cumple la oferta. `null` si el producto no tiene. */
+  precio_oferta: number | null
+  /** Condición de la oferta, tal como se le dice al cliente: "Llevando 2". */
+  oferta_detalle: string | null
   /** Código PLU de la balanza, si algún día se programan los productos. */
   plu: number | null
   stock_actual: number

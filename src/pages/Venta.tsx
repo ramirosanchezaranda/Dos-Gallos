@@ -8,6 +8,7 @@ import { preprocesarImagen } from '../lib/ocr/preprocess'
 import { parseTicket, type TicketParseado } from '../lib/ticket/parseTicket'
 import type { MetodoPago, Producto } from '../types/db'
 import { pesos, idLocal } from '../lib/formato'
+import { coincidePrecio, precioDe, tieneOferta, type TipoPrecio } from '../lib/precio'
 
 type Paso = 'captura' | 'leyendo' | 'revision' | 'listo'
 
@@ -17,6 +18,8 @@ interface Renglon {
   cantidad: number
   precioUnitario: number
   producto: Producto | null
+  /** Si el renglón va con el precio de lista o con el de oferta. */
+  tipoPrecio: TipoPrecio
   /** Precio tal como salió del ticket, para ordenar el selector. */
   precioTicket: number | undefined
 }
@@ -26,6 +29,7 @@ const nuevoRenglon = (): Renglon => ({
   cantidad: 0,
   precioUnitario: 0,
   producto: null,
+  tipoPrecio: 'normal',
   precioTicket: undefined,
 })
 
@@ -71,6 +75,7 @@ export default function Venta() {
               cantidad: it.cantidad,
               precioUnitario: it.precioUnitario,
               producto: null,
+              tipoPrecio: 'normal' as TipoPrecio,
               precioTicket: it.precioUnitario,
             }))
           : [nuevoRenglon()],
@@ -104,11 +109,19 @@ export default function Venta() {
 
   const elegirProducto = (id: string, p: Producto) => {
     const r = renglones.find((x) => x.id === id)
+    // Manda el precio del ticket; del producto solo sale si el ticket no trajo
+    // ninguno. Contra ese precio se decide si el renglón va con oferta.
+    const precioUnitario = r && r.precioUnitario > 0 ? r.precioUnitario : p.precio
     actualizar(id, {
       producto: p,
-      // Si el ticket no trajo precio, usamos el del producto.
-      precioUnitario: r && r.precioUnitario > 0 ? r.precioUnitario : p.precio,
+      precioUnitario,
+      tipoPrecio: coincidePrecio(p, precioUnitario) ?? 'normal',
     })
+  }
+
+  const cambiarTipoPrecio = (r: Renglon, tipo: TipoPrecio) => {
+    if (!r.producto) return
+    actualizar(r.id, { tipoPrecio: tipo, precioUnitario: precioDe(r.producto, tipo) })
   }
 
   const total = renglones.reduce((acc, r) => acc + r.cantidad * r.precioUnitario, 0)
@@ -275,6 +288,39 @@ export default function Venta() {
                   )}
                 </button>
 
+                {/* Precio de lista u oferta */}
+                {r.producto && tieneOferta(r.producto) && (
+                  <div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => cambiarTipoPrecio(r, 'normal')}
+                        className={`flex-1 py-2 rounded-lg text-sm font-medium ${
+                          r.tipoPrecio === 'normal'
+                            ? 'bg-verde-700 text-white'
+                            : 'bg-verde-100 text-verde-800'
+                        }`}
+                      >
+                        Lista {pesos(r.producto.precio)}
+                      </button>
+                      <button
+                        onClick={() => cambiarTipoPrecio(r, 'oferta')}
+                        className={`flex-1 py-2 rounded-lg text-sm font-medium ${
+                          r.tipoPrecio === 'oferta'
+                            ? 'bg-verde-700 text-white'
+                            : 'bg-verde-100 text-verde-800'
+                        }`}
+                      >
+                        🏷 Oferta {pesos(r.producto.precio_oferta as number)}
+                      </button>
+                    </div>
+                    {r.producto.oferta_detalle && (
+                      <p className="text-xs text-verde-700/60 mt-1">
+                        La oferta aplica: {r.producto.oferta_detalle.toLowerCase()}
+                      </p>
+                    )}
+                  </div>
+                )}
+
                 {/* Peso y precio */}
                 <div className="grid grid-cols-2 gap-3">
                   <label className="block">
@@ -299,9 +345,14 @@ export default function Venta() {
                       inputMode="decimal"
                       step="0.01"
                       value={r.precioUnitario || ''}
-                      onChange={(e) =>
-                        actualizar(r.id, { precioUnitario: parseFloat(e.target.value) || 0 })
-                      }
+                      onChange={(e) => {
+                        const precioUnitario = parseFloat(e.target.value) || 0
+                        actualizar(r.id, {
+                          precioUnitario,
+                          tipoPrecio:
+                            (r.producto && coincidePrecio(r.producto, precioUnitario)) ?? 'normal',
+                        })
+                      }}
                       className="w-full mt-1 border border-verde-200 rounded-lg px-3 py-2 text-base"
                     />
                   </label>

@@ -64,6 +64,19 @@ Al cargar el catálogo real quedaron **7 precios compartidos por 17 productos**:
 El precio por sí solo no alcanza para identificar el producto, así que la app
 lo sugiere pero no lo decide.
 
+### Ofertas
+
+Cada producto tiene un segundo precio opcional (`precio_oferta`) más la
+condición que hay que cumplir (`oferta_detalle`, del estilo "Llevando 2").
+
+`precio_oferta` es **siempre un precio unitario**: el maple de huevos a 2×$10.000
+se carga como $5.000 con la condición "Llevando 2", no como $10.000. Así el
+subtotal del renglón sigue siendo `cantidad × precio` sin casos especiales.
+
+En la venta, el selector ordena por el precio más cercano mirando los dos, y el
+renglón muestra un interruptor lista/oferta. Si los dos precios son iguales gana
+la oferta: cobra el mismo importe y deja registrado que se aplicó.
+
 ### La red de seguridad del parser
 
 El ticket imprime tres números ligados por `peso × precio = importe`. Si el

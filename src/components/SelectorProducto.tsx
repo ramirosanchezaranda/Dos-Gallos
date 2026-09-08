@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import type { Producto } from '../types/db'
 import { pesos } from '../lib/formato'
+import { coincidePrecio, distanciaPrecio, tieneOferta } from '../lib/precio'
 
 interface Props {
   productos: Producto[]
@@ -40,15 +41,16 @@ export function SelectorProducto({
       return filtrados.sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'))
     }
     return [...filtrados].sort((a, b) => {
-      const da = a.precio > 0 ? Math.abs(a.precio - precioTicket) : Infinity
-      const db = b.precio > 0 ? Math.abs(b.precio - precioTicket) : Infinity
+      const da = distanciaPrecio(a, precioTicket)
+      const db = distanciaPrecio(b, precioTicket)
       if (da !== db) return da - db
       return a.nombre.localeCompare(b.nombre, 'es')
     })
   }, [productos, busqueda, precioTicket])
 
-  const coincideExacto = (p: Producto) =>
-    precioTicket !== undefined && p.precio > 0 && Math.abs(p.precio - precioTicket) < 0.01
+  /** 'normal' | 'oferta' si el ticket da justo ese precio; null si no coincide. */
+  const coincidencia = (p: Producto) =>
+    precioTicket === undefined ? null : coincidePrecio(p, precioTicket)
 
   return (
     <div className="fixed inset-0 z-50 bg-black/40 flex items-end" onClick={onCerrar}>
@@ -85,7 +87,8 @@ export function SelectorProducto({
 
           <div className="space-y-1.5">
             {lista.map((p) => {
-              const exacto = coincideExacto(p)
+              const coincide = coincidencia(p)
+              const exacto = coincide !== null
               const seleccionado = elegido?.id === p.id
               return (
                 <button
@@ -110,9 +113,17 @@ export function SelectorProducto({
                       className={`text-xs ${seleccionado ? 'text-verde-100' : 'text-verde-700/70'}`}
                     >
                       {p.precio > 0 ? `${pesos(p.precio)}/${p.unidad}` : 'Sin precio cargado'}
+                      {tieneOferta(p) &&
+                        ` · 🏷 ${pesos(p.precio_oferta as number)}${
+                          p.oferta_detalle ? ` ${p.oferta_detalle.toLowerCase()}` : ''
+                        }`}
                     </p>
                   </div>
-                  {exacto && !seleccionado && <span className="badge-green shrink-0">= precio</span>}
+                  {exacto && !seleccionado && (
+                    <span className="badge-green shrink-0">
+                      {coincide === 'oferta' ? '= oferta' : '= precio'}
+                    </span>
+                  )}
                 </button>
               )
             })}

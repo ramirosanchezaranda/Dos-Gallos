@@ -11,12 +11,15 @@ import {
 } from '../hooks/useProductos'
 import type { Producto, Unidad } from '../types/db'
 import { pesos, cantidad as fmtCantidad } from '../lib/formato'
+import { tieneOferta } from '../lib/precio'
 
 type Borrador = {
   nombre: string
   categoria_id: string | null
   unidad: Unidad
   precio: string
+  precio_oferta: string
+  oferta_detalle: string
   stock_actual: string
   stock_minimo: string
   activo: boolean
@@ -27,6 +30,8 @@ const vacio = (categoria_id: string | null): Borrador => ({
   categoria_id,
   unidad: 'kg',
   precio: '',
+  precio_oferta: '',
+  oferta_detalle: '',
   stock_actual: '0',
   stock_minimo: '0',
   activo: true,
@@ -37,6 +42,8 @@ const desde = (p: Producto): Borrador => ({
   categoria_id: p.categoria_id,
   unidad: p.unidad,
   precio: String(p.precio),
+  precio_oferta: p.precio_oferta != null ? String(p.precio_oferta) : '',
+  oferta_detalle: p.oferta_detalle ?? '',
   stock_actual: String(p.stock_actual),
   stock_minimo: String(p.stock_minimo),
   activo: p.activo,
@@ -87,11 +94,14 @@ export default function Productos() {
   }
 
   const guardar = async () => {
+    const oferta = parseFloat(borrador.precio_oferta)
     const payload = {
       nombre: borrador.nombre.trim(),
       categoria_id: borrador.categoria_id,
       unidad: borrador.unidad,
       precio: parseFloat(borrador.precio) || 0,
+      precio_oferta: oferta > 0 ? oferta : null,
+      oferta_detalle: oferta > 0 ? borrador.oferta_detalle.trim() || null : null,
       stock_actual: parseFloat(borrador.stock_actual) || 0,
       stock_minimo: parseFloat(borrador.stock_minimo) || 0,
       activo: borrador.activo,
@@ -193,6 +203,12 @@ export default function Productos() {
                       <span className="text-alerta font-semibold">sin precio</span>
                     )}
                   </p>
+                  {tieneOferta(p) && (
+                    <p className="text-xs text-verde-800 font-medium mt-0.5">
+                      🏷 Oferta {pesos(p.precio_oferta as number)}/{p.unidad}
+                      {p.oferta_detalle && ` · ${p.oferta_detalle}`}
+                    </p>
+                  )}
                 </button>
                 <button
                   onClick={() => setIngreso({ p, cant: '' })}
@@ -282,6 +298,40 @@ export default function Productos() {
                   className="w-full mt-1 border border-verde-200 rounded-lg px-3 py-2 text-base"
                 />
               </label>
+            </div>
+
+            <div className="rounded-xl border border-verde-200 bg-verde-50/50 p-3 space-y-3">
+              <p className="text-xs font-semibold text-verde-800 uppercase tracking-wide">
+                Oferta (opcional)
+              </p>
+              <div className="grid grid-cols-2 gap-3">
+                <label className="block">
+                  <span className="text-xs text-verde-700 font-medium">
+                    Precio por {borrador.unidad}
+                  </span>
+                  <input
+                    type="number"
+                    inputMode="decimal"
+                    placeholder="Sin oferta"
+                    value={borrador.precio_oferta}
+                    onChange={(e) => setBorrador({ ...borrador, precio_oferta: e.target.value })}
+                    className="w-full mt-1 border border-verde-200 rounded-lg px-3 py-2 text-base bg-white"
+                  />
+                </label>
+                <label className="block">
+                  <span className="text-xs text-verde-700 font-medium">Cuándo aplica</span>
+                  <input
+                    value={borrador.oferta_detalle}
+                    onChange={(e) => setBorrador({ ...borrador, oferta_detalle: e.target.value })}
+                    placeholder="Llevando 2"
+                    className="w-full mt-1 border border-verde-200 rounded-lg px-3 py-2 text-base bg-white"
+                  />
+                </label>
+              </div>
+              <p className="text-xs text-verde-700/60">
+                Es el precio por {borrador.unidad} ya con la oferta aplicada. Dejalo vacío si el
+                producto no tiene.
+              </p>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
