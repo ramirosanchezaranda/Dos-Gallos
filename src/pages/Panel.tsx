@@ -3,17 +3,28 @@ import { PageHeader } from '../components/PageHeader'
 import { IconTrend, IconBox, IconCamera } from '../components/Icons'
 import { useProductos } from '../hooks/useProductos'
 import { useVentasDelDia } from '../hooks/useVentas'
+import { useFacturas, estadoReal, diasParaVencer } from '../hooks/useFacturas'
+import { useTareas } from '../hooks/useTareas'
 import { useAuth } from '../hooks/useAuth'
 import { pesos, cantidad as fmtCantidad, horaCorta, fechaLarga } from '../lib/formato'
 
 export default function Panel() {
   const { data: productos = [] } = useProductos()
   const { data: ventasHoy = [] } = useVentasDelDia()
+  const { data: facturas = [] } = useFacturas()
+  const { data: tareas = [] } = useTareas()
   const { salir } = useAuth()
 
   const totalHoy = ventasHoy.reduce((a, v) => a + Number(v.total), 0)
   const stockBajo = productos.filter((p) => p.activo && p.stock_actual < p.stock_minimo)
   const sinPrecio = productos.filter((p) => p.activo && p.precio === 0)
+
+  const facturasVencidas = facturas.filter((f) => estadoReal(f) === 'vencida')
+  const facturasPorVencer = facturas.filter((f) => {
+    const d = diasParaVencer(f)
+    return estadoReal(f) === 'pendiente' && d !== null && d >= 0 && d <= 7
+  })
+  const tareasAltas = tareas.filter((t) => t.estado !== 'hecho' && t.prioridad === 'alta')
 
   return (
     <>
@@ -64,6 +75,40 @@ export default function Panel() {
             className="block bg-amber-50 border border-amber-200 rounded-xl p-3 text-sm text-amber-800"
           >
             <strong>{sinPrecio.length} producto(s) sin precio.</strong> Tocá para cargarlos.
+          </Link>
+        )}
+
+        {facturasVencidas.length > 0 && (
+          <Link
+            to="/facturas"
+            className="block bg-red-50 border border-red-200 rounded-xl p-3 text-sm text-red-700"
+          >
+            <strong>
+              {facturasVencidas.length} factura{facturasVencidas.length === 1 ? '' : 's'} vencida
+              {facturasVencidas.length === 1 ? '' : 's'}
+            </strong>{' '}
+            por {pesos(facturasVencidas.reduce((a, f) => a + Number(f.total), 0))}
+          </Link>
+        )}
+
+        {facturasPorVencer.length > 0 && (
+          <Link
+            to="/facturas"
+            className="block bg-amber-50 border border-amber-200 rounded-xl p-3 text-sm text-amber-800"
+          >
+            <strong>
+              {facturasPorVencer.length} factura{facturasPorVencer.length === 1 ? '' : 's'}
+            </strong>{' '}
+            vence{facturasPorVencer.length === 1 ? '' : 'n'} esta semana
+          </Link>
+        )}
+
+        {tareasAltas.length > 0 && (
+          <Link
+            to="/pendientes"
+            className="block bg-verde-50 border border-verde-200 rounded-xl p-3 text-sm text-verde-800"
+          >
+            <strong>{tareasAltas.length} pendiente(s) de prioridad alta</strong>
           </Link>
         )}
 
