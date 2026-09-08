@@ -26,7 +26,12 @@ export interface Producto {
   id: string
   nombre: string
   categoria_id: string | null
+  /** Cómo se cobra: $/kg o $/unidad. */
   unidad: Unidad
+  /** Cómo se cuenta el stock. Puede no coincidir con `unidad`. */
+  unidad_stock: Unidad
+  /** Kilos que pesa una pieza. Obligatorio si `unidad` y `unidad_stock` difieren. */
+  peso_unidad: number | null
   /** $/kg o $/unidad. Es la clave con la que se identifica el producto en el ticket. */
   precio: number
   /** Precio unitario cuando se cumple la oferta. `null` si el producto no tiene. */

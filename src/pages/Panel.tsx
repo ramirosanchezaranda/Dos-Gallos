@@ -120,7 +120,7 @@ export default function Panel() {
                 <div key={p.id} className="card flex items-center justify-between">
                   <span className="font-medium truncate">{p.nombre}</span>
                   <span className="text-alerta font-bold text-sm shrink-0">
-                    {fmtCantidad(p.stock_actual, p.unidad)}
+                    {fmtCantidad(p.stock_actual, p.unidad_stock)}
                   </span>
                 </div>
               ))}

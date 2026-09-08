@@ -12,11 +12,14 @@ import {
 import type { Producto, Unidad } from '../types/db'
 import { pesos, cantidad as fmtCantidad } from '../lib/formato'
 import { tieneOferta } from '../lib/precio'
+import { necesitaPesoUnidad } from '../lib/stock'
 
 type Borrador = {
   nombre: string
   categoria_id: string | null
   unidad: Unidad
+  unidad_stock: Unidad
+  peso_unidad: string
   precio: string
   precio_oferta: string
   oferta_detalle: string
@@ -29,6 +32,8 @@ const vacio = (categoria_id: string | null): Borrador => ({
   nombre: '',
   categoria_id,
   unidad: 'kg',
+  unidad_stock: 'kg',
+  peso_unidad: '',
   precio: '',
   precio_oferta: '',
   oferta_detalle: '',
@@ -41,6 +46,8 @@ const desde = (p: Producto): Borrador => ({
   nombre: p.nombre,
   categoria_id: p.categoria_id,
   unidad: p.unidad,
+  unidad_stock: p.unidad_stock,
+  peso_unidad: p.peso_unidad != null ? String(p.peso_unidad) : '',
   precio: String(p.precio),
   precio_oferta: p.precio_oferta != null ? String(p.precio_oferta) : '',
   oferta_detalle: p.oferta_detalle ?? '',
@@ -79,6 +86,9 @@ export default function Productos() {
   }, [productos, catActiva, busqueda])
 
   const sinPrecio = productos.filter((p) => p.activo && p.precio === 0).length
+  const faltaPeso = necesitaPesoUnidad(borrador.unidad, borrador.unidad_stock)
+  const puedeGuardar =
+    borrador.nombre.trim() !== '' && (!faltaPeso || parseFloat(borrador.peso_unidad) > 0)
 
   const abrirNuevo = () => {
     setBorrador(vacio(catActiva))
@@ -95,10 +105,14 @@ export default function Productos() {
 
   const guardar = async () => {
     const oferta = parseFloat(borrador.precio_oferta)
+    const peso = parseFloat(borrador.peso_unidad)
     const payload = {
       nombre: borrador.nombre.trim(),
       categoria_id: borrador.categoria_id,
       unidad: borrador.unidad,
+      unidad_stock: borrador.unidad_stock,
+      // El peso solo tiene sentido cuando se cobra y se cuenta distinto.
+      peso_unidad: faltaPeso && peso > 0 ? peso : null,
       precio: parseFloat(borrador.precio) || 0,
       precio_oferta: oferta > 0 ? oferta : null,
       oferta_detalle: oferta > 0 ? borrador.oferta_detalle.trim() || null : null,
@@ -216,7 +230,7 @@ export default function Productos() {
                   aria-label="Ajustar stock"
                 >
                   <p className={`font-bold text-sm ${bajo ? 'text-alerta' : 'text-verde-700'}`}>
-                    {fmtCantidad(p.stock_actual, p.unidad)}
+                    {fmtCantidad(p.stock_actual, p.unidad_stock)}
                   </p>
                   {bajo && <span className="badge-red">bajo</span>}
                 </button>
@@ -334,9 +348,47 @@ export default function Productos() {
               </p>
             </div>
 
+            <label className="block">
+              <span className="text-xs text-verde-700 font-medium">El stock se cuenta por</span>
+              <select
+                value={borrador.unidad_stock}
+                onChange={(e) =>
+                  setBorrador({ ...borrador, unidad_stock: e.target.value as Unidad })
+                }
+                className="w-full mt-1 border border-verde-200 rounded-lg px-3 py-2 text-base bg-white"
+              >
+                <option value="kg">Kilo</option>
+                <option value="unidad">Unidad</option>
+              </select>
+            </label>
+
+            {faltaPeso && (
+              <label className="block rounded-xl border border-amber-200 bg-amber-50 p-3">
+                <span className="text-xs text-amber-800 font-medium">
+                  ¿Cuánto pesa una unidad?
+                </span>
+                <input
+                  type="number"
+                  inputMode="decimal"
+                  step="0.001"
+                  placeholder="kg"
+                  value={borrador.peso_unidad}
+                  onChange={(e) => setBorrador({ ...borrador, peso_unidad: e.target.value })}
+                  className="w-full mt-1 border border-amber-200 rounded-lg px-3 py-2 text-base bg-white"
+                />
+                <span className="block text-xs text-amber-800/80 mt-1">
+                  {borrador.unidad === 'kg'
+                    ? 'Cobrás por kilo pero contás por pieza, así que hace falta para saber cuántas piezas descontar.'
+                    : 'Cobrás por pieza pero contás en kilos, así que hace falta para saber cuántos kilos descontar.'}
+                </span>
+              </label>
+            )}
+
             <div className="grid grid-cols-2 gap-3">
               <label className="block">
-                <span className="text-xs text-verde-700 font-medium">Stock actual</span>
+                <span className="text-xs text-verde-700 font-medium">
+                  Stock actual ({borrador.unidad_stock === 'kg' ? 'kg' : 'u.'})
+                </span>
                 <input
                   type="number"
                   inputMode="decimal"
@@ -374,7 +426,7 @@ export default function Productos() {
               <button
                 className="btn-primary flex-1"
                 onClick={() => void guardar()}
-                disabled={!borrador.nombre.trim() || crear.isPending || editar.isPending}
+                disabled={!puedeGuardar || crear.isPending || editar.isPending}
               >
                 Guardar
               </button>
@@ -400,7 +452,7 @@ export default function Productos() {
                onClick={(e) => e.stopPropagation()}>
             <h2 className="font-bold text-verde-900">{ingreso.p.nombre}</h2>
             <p className="text-sm text-verde-700">
-              Stock actual: {fmtCantidad(ingreso.p.stock_actual, ingreso.p.unidad)}
+              Stock actual: {fmtCantidad(ingreso.p.stock_actual, ingreso.p.unidad_stock)}
             </p>
             <label className="block">
               <span className="text-xs text-verde-700 font-medium">

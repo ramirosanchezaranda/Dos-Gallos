@@ -7,8 +7,9 @@ import { useRegistrarVenta } from '../hooks/useVentas'
 import { preprocesarImagen } from '../lib/ocr/preprocess'
 import { parseTicket, type TicketParseado } from '../lib/ticket/parseTicket'
 import type { MetodoPago, Producto } from '../types/db'
-import { pesos, idLocal } from '../lib/formato'
+import { pesos, idLocal, cantidad as fmtCantidad } from '../lib/formato'
 import { coincidePrecio, precioDe, tieneOferta, type TipoPrecio } from '../lib/precio'
+import { descuentoDeStock } from '../lib/stock'
 
 type Paso = 'captura' | 'leyendo' | 'revision' | 'listo'
 
@@ -364,6 +365,17 @@ export default function Venta() {
                     {pesos(r.cantidad * r.precioUnitario, 2)}
                   </span>
                 </div>
+
+                {/* Cuando se cobra y se cuenta distinto, el descuento no es obvio. */}
+                {r.producto &&
+                  r.producto.unidad_stock !== r.producto.unidad &&
+                  r.cantidad > 0 && (
+                    <p className="text-xs text-verde-700/60 -mt-1">
+                      Descuenta{' '}
+                      {fmtCantidad(descuentoDeStock(r.producto, r.cantidad) ?? 0, r.producto.unidad_stock)}{' '}
+                      del stock
+                    </p>
+                  )}
               </div>
             ))}
 

@@ -80,6 +80,21 @@ En la venta, el selector ordena por el precio más cercano mirando los dos, y el
 renglón muestra un interruptor lista/oferta. Si los dos precios son iguales gana
 la oferta: cobra el mismo importe y deja registrado que se aplicó.
 
+### Cómo se cobra vs. cómo se cuenta
+
+Son dos cosas distintas y cada producto elige las dos por separado: `unidad`
+es cómo se cobra ($/kg o $/unidad) y `unidad_stock` es en qué se cuenta la
+mercadería.
+
+Cuando difieren hace falta `peso_unidad`, los kilos que pesa una pieza. Con eso
+`registrar_venta()` convierte antes de descontar: vender 4,4 kg de un pollo que
+se cuenta por pieza y pesa 2,2 kg saca 2 del stock, no 4,4. Una restricción en
+la tabla impide guardar un producto con las unidades cruzadas y sin ese peso,
+así que la venta nunca se encuentra sin poder convertir.
+
+`descuentoDeStock()` en `src/lib/stock.ts` repite esa cuenta para mostrarla en
+la pantalla de venta; quien descuenta de verdad es la función de Postgres.
+
 ### La red de seguridad del parser
 
 El ticket imprime tres números ligados por `peso × precio = importe`. Si el
