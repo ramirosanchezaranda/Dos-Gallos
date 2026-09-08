@@ -3,6 +3,8 @@ import { PageHeader } from '../components/PageHeader'
 import { IconTrend, IconBox, IconCamera } from '../components/Icons'
 import { useProductos } from '../hooks/useProductos'
 import { useVentasDelDia } from '../hooks/useVentas'
+import { useVentasVentana } from '../hooks/useEstadisticas'
+import { suma } from '../lib/estadisticas'
 import { useFacturas, estadoReal, diasParaVencer } from '../hooks/useFacturas'
 import { useTareas } from '../hooks/useTareas'
 import { useAuth } from '../hooks/useAuth'
@@ -11,11 +13,16 @@ import { pesos, cantidad as fmtCantidad, horaCorta, fechaLarga } from '../lib/fo
 export default function Panel() {
   const { data: productos = [] } = useProductos()
   const { data: ventasHoy = [] } = useVentasDelDia()
+  const { data: ventasVentana = [] } = useVentasVentana()
   const { data: facturas = [] } = useFacturas()
   const { data: tareas = [] } = useTareas()
   const { salir } = useAuth()
 
   const totalHoy = ventasHoy.reduce((a, v) => a + Number(v.total), 0)
+
+  const hoyFecha = new Date()
+  const inicioMes = new Date(hoyFecha.getFullYear(), hoyFecha.getMonth(), 1)
+  const totalMes = suma(ventasVentana.filter((v) => new Date(v.fecha) >= inicioMes))
   const stockBajo = productos.filter((p) => p.activo && p.stock_actual < p.stock_minimo)
   const sinPrecio = productos.filter((p) => p.activo && p.precio === 0)
 
@@ -43,23 +50,28 @@ export default function Panel() {
           <p className="text-sm text-verde-700 capitalize">{fechaLarga(new Date().toISOString())}</p>
         </div>
 
+        {/* Los tres llevan a estadísticas: son el resumen, el detalle está allá. */}
         <div className="grid grid-cols-3 gap-3">
-          <div className="card flex flex-col items-center text-center gap-1">
+          <Link to="/estadisticas" className="card flex flex-col items-center text-center gap-1">
             <IconTrend className="w-6 h-6 text-verde-700" />
-            <p className="text-lg font-bold text-verde-900 leading-tight">{pesos(totalHoy)}</p>
-            <p className="text-[10px] text-verde-700 leading-tight">Vendido hoy</p>
-          </div>
-          <div className="card flex flex-col items-center text-center gap-1">
+            <p className="text-lg font-bold text-verde-900 leading-tight">{pesos(totalMes)}</p>
+            <p className="text-[10px] text-verde-700 leading-tight">Ventas del mes</p>
+          </Link>
+          <Link to="/estadisticas" className="card flex flex-col items-center text-center gap-1">
             <IconBox className="w-6 h-6 text-verde-700" />
             <p className="text-lg font-bold text-verde-900">{ventasHoy.length}</p>
             <p className="text-[10px] text-verde-700 leading-tight">Ventas hoy</p>
-          </div>
-          <div className="card flex flex-col items-center text-center gap-1">
+          </Link>
+          <Link to="/estadisticas" className="card flex flex-col items-center text-center gap-1">
             <IconBox className={`w-6 h-6 ${stockBajo.length ? 'text-alerta' : 'text-verde-700'}`} />
             <p className="text-lg font-bold text-verde-900">{stockBajo.length}</p>
             <p className="text-[10px] text-verde-700 leading-tight">Stock bajo</p>
-          </div>
+          </Link>
         </div>
+
+        <p className="text-xs text-center text-verde-700/60 -mt-1">
+          Hoy: {pesos(totalHoy)} · Tocá cualquier tarjeta para ver las estadísticas
+        </p>
 
         <Link to="/venta" className="card flex items-center gap-4 bg-verde-800 text-white border-none">
           <IconCamera className="w-8 h-8 shrink-0" />

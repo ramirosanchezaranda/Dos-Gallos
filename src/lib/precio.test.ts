@@ -7,6 +7,8 @@ const prod = (precio: number, precio_oferta: number | null = null): Producto => 
   nombre: 'Producto',
   categoria_id: null,
   unidad: 'kg',
+  unidad_stock: 'kg',
+  peso_unidad: null,
   precio,
   precio_oferta,
   oferta_detalle: precio_oferta != null ? 'Llevando 2' : null,

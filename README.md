@@ -95,6 +95,37 @@ así que la venta nunca se encuentra sin poder convertir.
 `descuentoDeStock()` en `src/lib/stock.ts` repite esa cuenta para mostrarla en
 la pantalla de venta; quien descuenta de verdad es la función de Postgres.
 
+### Dictar la venta
+
+Con las manos mojadas o con grasa, hablar es lo único que no obliga a tocar el
+teléfono. El botón usa el reconocimiento de voz del propio navegador
+(`src/lib/voz/reconocimiento.ts`): no hay servidor, ni API key, ni audio que
+salga a ningún lado. Safari no lo soporta bien, así que el botón se esconde
+donde no funciona en vez de fallar.
+
+Lo transcripto lo interpreta `parseDictado()`, que es a reglas y no un modelo:
+entiende "un kilo y medio", "medio kilo", "novecientos gramos", "un kilo
+doscientos" y encadena renglones con "y", coma o "más". Lo que sale **siempre**
+pasa por la pantalla de revisión; nunca se guarda una venta sola.
+
+El caso que más costó: "y medio" es parte de la cantidad en "un kilo y medio"
+pero arranca un renglón nuevo en "un kilo de chorizo **y medio** kilo de
+morcilla". Se resuelve mirando si viene pegado a la unidad.
+
+### Estadísticas
+
+`/estadisticas` (se llega tocando cualquier tarjeta del panel) responde cuánto
+se vendió contra el mes pasado, qué días rinden más, qué productos dejan más
+plata y cómo paga la gente.
+
+Los gráficos son de una sola serie a propósito: el verde de la marca y el
+naranja de alerta tienen una separación de apenas ΔE 3,1 en visión protán, o
+sea que un daltónico no los distingue. Lo que separa cada barra es su etiqueta,
+nunca el color.
+
+Las cuentas viven en `src/lib/estadisticas.ts` como funciones puras, así se
+prueban sin base de datos.
+
 ### La red de seguridad del parser
 
 El ticket imprime tres números ligados por `peso × precio = importe`. Si el

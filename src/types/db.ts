@@ -9,7 +9,7 @@
 export type Unidad = 'kg' | 'unidad'
 export type TipoMovimiento = 'ingreso' | 'venta' | 'ajuste' | 'merma'
 export type MetodoPago = 'efectivo' | 'debito' | 'credito' | 'transferencia' | 'qr'
-export type OrigenVenta = 'ocr' | 'manual'
+export type OrigenVenta = 'ocr' | 'manual' | 'voz'
 export type TipoFactura = 'A' | 'B' | 'C' | 'X' | 'M'
 export type EstadoFactura = 'pendiente' | 'pagada' | 'vencida' | 'anulada'
 export type Prioridad = 'alta' | 'media' | 'baja'
