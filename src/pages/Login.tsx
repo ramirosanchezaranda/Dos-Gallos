@@ -24,9 +24,11 @@ export default function Login() {
   return (
     <div className="min-h-screen bg-verde-800 flex flex-col items-center justify-center p-6">
       <div className="w-full max-w-sm space-y-6">
-        <div className="text-center text-white space-y-2">
-          <div className="text-5xl">🐓</div>
-          <h1 className="text-2xl font-bold tracking-wide">Dos Gallos</h1>
+        <div className="text-center space-y-3">
+          {/* El logo ya trae el nombre, por eso no va un titulo aparte. */}
+          <div className="w-36 h-36 mx-auto rounded-full bg-hueso flex items-center justify-center p-5 shadow-lg">
+            <img src="/logo.png" alt="Dos Gallos" className="w-full" />
+          </div>
           <p className="text-verde-200 text-sm">Control de stock</p>
         </div>
 
