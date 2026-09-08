@@ -95,8 +95,12 @@ proveedores · gastos · facturas
 tareas
 ```
 
-RLS activo en todas las tablas: solo usuarios autenticados. La venta se
-registra con la función `registrar_venta(p_items, ...)`, que es transaccional.
+RLS activo en todas las tablas. No alcanza con estar autenticado: hay que
+figurar en `miembros`, que se carga a mano desde el panel de Supabase. La app
+está en una URL pública, así que registrarse por su cuenta no da acceso a nada.
+
+La venta se registra con la función `registrar_venta(p_items, ...)`, que es
+transaccional y `SECURITY INVOKER`, o sea que también pasa por RLS.
 
 Para regenerar los tipos desde el esquema:
 
