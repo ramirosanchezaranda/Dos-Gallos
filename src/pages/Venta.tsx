@@ -1,6 +1,4 @@
 import { useRef, useState } from 'react'
-import { escuchar, vozSoportada } from '../lib/voz/reconocimiento'
-import { parseDictado } from '../lib/voz/parseDictado'
 import { PageHeader } from '../components/PageHeader'
 import { SelectorProducto } from '../components/SelectorProducto'
 import { IconCamera, IconPlus } from '../components/Icons'
@@ -13,7 +11,7 @@ import { pesos, idLocal, cantidad as fmtCantidad } from '../lib/formato'
 import { coincidePrecio, precioDe, tieneOferta, type TipoPrecio } from '../lib/precio'
 import { descuentoDeStock } from '../lib/stock'
 
-type Paso = 'captura' | 'leyendo' | 'escuchando' | 'revision' | 'listo'
+type Paso = 'captura' | 'leyendo' | 'revision' | 'listo'
 
 /** Un renglón en edición: lo que leyó el ticket + el producto que elegiste. */
 interface Renglon {
@@ -52,12 +50,8 @@ export default function Venta() {
   const [renglones, setRenglones] = useState<Renglon[]>([])
   const [metodoPago, setMetodoPago] = useState<MetodoPago>('efectivo')
   const [editandoProducto, setEditandoProducto] = useState<string | null>(null)
-  const [transcripcion, setTranscripcion] = useState('')
-  const [dictado, setDictado] = useState<{ texto: string; advertencias: string[] } | null>(null)
 
   const fileRef = useRef<HTMLInputElement>(null)
-  const detenerVoz = useRef<(() => void) | null>(null)
-  const dictadoCancelado = useRef(false)
   const { data: productos = [] } = useProductos()
   const registrar = useRegistrarVenta()
 
@@ -94,75 +88,14 @@ export default function Venta() {
     }
   }
 
-  // ── Dictado ──────────────────────────────────────────────
-  const empezarDictado = () => {
-    setError(null)
-    setTranscripcion('')
-    dictadoCancelado.current = false
-    setPaso('escuchando')
-    detenerVoz.current = escuchar({
-      onParcial: setTranscripcion,
-      onFinal: aplicarDictado,
-      onError: (msg) => {
-        setError(msg)
-        setPaso('captura')
-      },
-    })
-  }
-
-  const aplicarDictado = (texto: string) => {
-    // Cortar el micrófono dispara igual el resultado final, así que si el
-    // usuario canceló hay que descartarlo en vez de mandarlo a revisión.
-    if (dictadoCancelado.current) return
-    if (!texto.trim()) {
-      setPaso('captura')
-      return
-    }
-    const activos = productos.filter((p) => p.activo)
-    const { items, advertencias } = parseDictado(texto, activos)
-    if (items.length === 0) {
-      setError(`No se entendió "${texto}". Probá de nuevo o cargala a mano.`)
-      setPaso('captura')
-      return
-    }
-
-    setTicket(null)
-    setDictado({ texto, advertencias })
-    setRenglones(
-      items.map((it) => {
-        const prod = activos.find((p) => p.id === it.producto?.id) ?? null
-        return {
-          id: idLocal(),
-          cantidad: it.cantidad ?? 0,
-          precioUnitario: prod?.precio ?? 0,
-          producto: prod,
-          tipoPrecio: 'normal' as TipoPrecio,
-          precioTicket: undefined,
-        }
-      }),
-    )
-    setPaso('revision')
-  }
-
-  const cancelarDictado = () => {
-    dictadoCancelado.current = true
-    detenerVoz.current?.()
-    detenerVoz.current = null
-    setTranscripcion('')
-    setPaso('captura')
-  }
-
   const empezarManual = () => {
     setTicket(null)
-    setDictado(null)
     setRenglones([nuevoRenglon()])
     setPaso('revision')
   }
 
   const reiniciar = () => {
     setTicket(null)
-    setDictado(null)
-    setTranscripcion('')
     setRenglones([])
     setProgreso(0)
     setError(null)
@@ -206,11 +139,11 @@ export default function Venta() {
           precio_unitario: r.precioUnitario,
         })),
         metodo_pago: metodoPago,
-        origen: ticket ? 'ocr' : dictado ? 'voz' : 'manual',
+        origen: ticket ? 'ocr' : 'manual',
         ticket_nro: ticket?.numero ?? null,
         // Queda guardado lo que se leyo o se dicto, para poder revisar despues
         // una venta que salio rara.
-        ocr_raw: ticket?.textoCrudo ?? dictado?.texto ?? null,
+        ocr_raw: ticket?.textoCrudo ?? null,
       })
       setPaso('listo')
     } catch (e) {
@@ -262,27 +195,6 @@ export default function Venta() {
               }}
             />
 
-            <div className="flex items-center gap-3">
-              <div className="flex-1 h-px bg-verde-200" />
-              <span className="text-xs text-verde-700/60">o</span>
-              <div className="flex-1 h-px bg-verde-200" />
-            </div>
-
-            {vozSoportada() && (
-              <button
-                onClick={empezarDictado}
-                className="w-full card flex items-center gap-3 text-verde-700 font-medium"
-              >
-                <span className="text-xl">🎤</span>
-                <span className="text-left">
-                  Dictar la venta
-                  <span className="block text-xs text-verde-700/60 font-normal">
-                    "un kilo y medio de pollo entero y dos maples"
-                  </span>
-                </span>
-              </button>
-            )}
-
             <button
               onClick={empezarManual}
               className="w-full card flex items-center gap-3 text-verde-700 font-medium"
@@ -305,40 +217,6 @@ export default function Venta() {
               />
             </div>
             <p className="text-xs text-verde-700/60">La primera vez tarda unos segundos más</p>
-          </div>
-        )}
-
-        {/* ─── ESCUCHANDO ─── */}
-        {paso === 'escuchando' && (
-          <div className="py-10 text-center space-y-5">
-            <div className="relative w-24 h-24 mx-auto">
-              <span className="absolute inset-0 rounded-full bg-verde-200 animate-ping opacity-60" />
-              <span className="relative w-24 h-24 rounded-full bg-verde-700 flex items-center justify-center text-4xl">
-                🎤
-              </span>
-            </div>
-
-            <div>
-              <p className="font-semibold text-verde-900">Te escucho</p>
-              <p className="text-xs text-verde-700/60 mt-1">
-                Decí cantidad y producto. Podés encadenar varios con "y".
-              </p>
-            </div>
-
-            <div className="card min-h-20 flex items-center justify-center">
-              <p className={transcripcion ? 'text-verde-900' : 'text-verde-700/40 text-sm'}>
-                {transcripcion || 'Esperando que hables…'}
-              </p>
-            </div>
-
-            {/* Cortar es explícito: el silencio entre cliente y cliente no
-                tiene que dar por terminada la venta. */}
-            <button className="btn-primary w-full py-3" onClick={() => detenerVoz.current?.()}>
-              Listo, ya está
-            </button>
-            <button className="btn-ghost w-full" onClick={cancelarDictado}>
-              Cancelar
-            </button>
           </div>
         )}
 
@@ -372,23 +250,6 @@ export default function Venta() {
               </div>
             )}
 
-            {dictado && (
-              <div
-                className={`rounded-xl p-3 text-sm border ${
-                  dictado.advertencias.length === 0
-                    ? 'bg-verde-50 border-verde-200 text-verde-800'
-                    : 'bg-amber-50 border-amber-200 text-amber-800'
-                }`}
-              >
-                <p className="font-semibold">🎤 "{dictado.texto}"</p>
-                {dictado.advertencias.map((a, i) => (
-                  <p key={i} className="text-xs mt-1">
-                    {a}
-                  </p>
-                ))}
-                <p className="text-xs mt-1">Revisá que esté bien antes de confirmar.</p>
-              </div>
-            )}
 
             {renglones.map((r, i) => (
               <div key={r.id} className="card space-y-3">

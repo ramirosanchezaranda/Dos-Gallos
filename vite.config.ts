@@ -10,6 +10,9 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.png', 'apple-touch-icon.png', 'logo.png'],
+      // El motor de OCR son varios MB y solo hace falta al leer un ticket:
+      // se descarga cuando se usa, no al instalar la app.
+      workbox: { globIgnores: ['**/ocr/**'] },
       manifest: {
         name: 'Dos Gallos - Stock',
         short_name: 'Dos Gallos',

@@ -15,6 +15,9 @@ import type { OcrProvider, ResultadoOcr } from './provider'
 const CARACTERES =
   '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz.,:/@$=-() '
 
+/** Carpeta propia con el worker, el motor y el modelo. */
+const BASE = '/ocr/'
+
 let workerCache: Worker | null = null
 let creando: Promise<Worker> | null = null
 
@@ -24,6 +27,13 @@ async function obtenerWorker(onProgreso?: (p: number) => void): Promise<Worker> 
 
   creando = (async () => {
     const w = await createWorker('spa', 1, {
+      // Servidos por la propia app en vez de jsdelivr. Brave bloquea ese CDN
+      // y la lectura fallaba antes de arrancar; así tampoco depende de que
+      // haya internet. Los copia scripts/copiar-ocr.mjs en cada build.
+      workerPath: `${BASE}worker.min.js`,
+      corePath: BASE,
+      langPath: BASE,
+      gzip: true,
       logger: onProgreso
         ? (m) => {
             if (m.status === 'recognizing text') onProgreso(m.progress)

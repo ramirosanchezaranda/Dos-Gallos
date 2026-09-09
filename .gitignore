@@ -2,3 +2,6 @@ node_modules
 dist
 .env
 .env.local
+
+# Assets de OCR: se copian desde node_modules en cada build
+public/ocr/
