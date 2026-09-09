@@ -34,16 +34,19 @@ async function obtenerWorker(onProgreso?: (p: number) => void): Promise<Worker> 
       corePath: BASE,
       langPath: BASE,
       gzip: true,
-      logger: onProgreso
-        ? (m) => {
-            if (m.status === 'recognizing text') onProgreso(m.progress)
-          }
-        : undefined,
+      // Siempre una función: Tesseract la llama sin comprobar, y pasarle
+      // `undefined` cuando no hay callback de progreso lo hace explotar.
+      logger: (m) => {
+        if (m.status === 'recognizing text') onProgreso?.(m.progress)
+      },
     })
     await w.setParameters({
       tessedit_char_whitelist: CARACTERES,
-      // PSM 6 = un bloque de texto uniforme. Es exactamente la forma de un ticket.
-      tessedit_pageseg_mode: '6' as never,
+      // PSM 3 = segmentación automática. Sobre fotos reales del mostrador
+      // rinde bastante mejor que el modo "bloque uniforme": el ticket sale
+      // inclinado y con el código de barras al pie, y el modo uniforme
+      // desalineaba los renglones enteros.
+      tessedit_pageseg_mode: '3' as never,
       preserve_interword_spaces: '1',
     })
     workerCache = w

@@ -65,13 +65,27 @@ const TOLERANCIA = 0.02
 // ─────────────────────────────────────────────────────────────
 
 /**
- * `0.430kg @ 4000.00$/kg` — acepta variantes de OCR en "kg" y "@".
+ * `0.430kg @ 4000.00$/kg` — el peso, y a la derecha el precio por kilo.
  *
- * El grupo del precio es opcional (`*`): si el OCR se comió el precio, el
+ * Sobre fotos reales el separador llega de cualquier forma: `@` sale `E`,
+ * `a`, `3`, `4`, y el `$/kg` termina en `F/Kg`, `.0$/9` o `.08/E5`. Por eso
+ * el ancla es el número pegado a `kg` y entre medio se admite cualquier
+ * cosa corta, en vez de exigir el `$/kg` literal.
+ *
+ * Todo lo que sigue a `kg` es opcional: si el OCR se comió el precio, el
  * renglón se detecta igual y `reconciliarItem` lo recupera del importe.
  */
 const RE_ITEM =
-  /([\d.,OoIlSsBZq|]+)\s*[kK][gG9q]?\s*[@aA©Q]\s*([\d.,OoIlSsBZq|]*)\s*\$?\s*[/1|]?\s*[kK][gG9q]?/
+  /([\d.,OoIlSsBZq|]+)\s*[kK][gG9qoO0a]?(?:\s*\S{0,2}\s*([\d.,OoIlSsBZq|]{2,}))?/
+
+/**
+ * `1 U @ 1500.00$/U` — el renglón por unidad, que no lleva peso.
+ *
+ * La `U` va sola entre espacios; pedirla así evita confundirla con la `U`
+ * de otras palabras del ticket.
+ */
+const RE_ITEM_UNIDAD =
+  /(?:^|\s)([\d OoIlSsB|]{1,3})\s+[uU]\s*\S{0,2}?\s*([\d.,OoIlSsBZq|]{2,})/
 
 /** Importe suelto a la derecha: `1720.00$` */
 const RE_IMPORTE = /([\d.,OoIlSsBZq|]+)\s*\$/
@@ -190,7 +204,11 @@ export function parseTicket(textoCrudo: string): TicketParseado {
   // misma línea o en la siguiente, alineado a la derecha.
   for (let i = 0; i < lineas.length; i++) {
     const linea = lineas[i]
-    const m = linea.match(RE_ITEM)
+    // La línea de total también empieza con números y "ART.": si no se
+    // descarta primero, se cuela como si fuera un renglón de producto.
+    if (RE_TOTAL.test(linea) || RE_TOTAL_SIMPLE.test(linea)) continue
+
+    const m = linea.match(RE_ITEM) ?? linea.match(RE_ITEM_UNIDAD)
     if (!m) continue
 
     const cantidad = parseNumero(m[1])
@@ -204,7 +222,7 @@ export function parseTicket(textoCrudo: string): TicketParseado {
     if (subtotal === null && i + 1 < lineas.length) {
       const sig = lineas[i + 1]
       // Que la línea siguiente sea SOLO un importe, no otro renglón de ítem.
-      if (!RE_ITEM.test(sig) && !RE_TOTAL.test(sig)) {
+      if (!RE_ITEM.test(sig) && !RE_ITEM_UNIDAD.test(sig) && !RE_TOTAL.test(sig)) {
         const mImp = sig.match(RE_IMPORTE)
         if (mImp) {
           subtotal = parseNumero(mImp[1])
