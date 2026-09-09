@@ -106,7 +106,7 @@ export interface Gasto {
 export interface Factura {
   id: string
   tipo: TipoFactura
-  numero: string
+  numero: string | null
   proveedor_id: string | null
   fecha_emision: string
   fecha_vencimiento: string | null

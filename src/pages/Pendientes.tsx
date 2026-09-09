@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { PageHeader } from '../components/PageHeader'
+import { HojaInferior } from '../components/HojaInferior'
 import { IconPlus } from '../components/Icons'
 import { useTareas, useGuardarTarea, useBorrarTarea } from '../hooks/useTareas'
 import type { Tarea, Prioridad } from '../types/db'
@@ -156,15 +157,34 @@ export default function Pendientes() {
 
       {/* ─── Formulario ─── */}
       {abierto && (
-        <div className="fixed inset-0 z-50 bg-black/40 flex items-end" onClick={cerrar}>
-          <div
-            className="bg-hueso w-full max-w-lg mx-auto rounded-t-3xl p-4 space-y-3"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="w-10 h-1 bg-verde-200 rounded-full mx-auto" />
-            <h2 className="font-bold text-verde-900">
-              {editando ? 'Editar tarea' : 'Nueva tarea'}
-            </h2>
+        <HojaInferior
+          titulo={editando ? 'Editar tarea' : 'Nueva tarea'}
+          onCerrar={cerrar}
+          acciones={
+            <>
+              <div className="flex gap-2">
+                <button className="btn-ghost flex-1" onClick={cerrar}>
+                  Cancelar
+                </button>
+                <button
+                  className="btn-primary flex-1"
+                  onClick={() => void enviar()}
+                  disabled={!titulo.trim() || guardar.isPending}
+                >
+                  Guardar
+                </button>
+              </div>
+              {editando && (
+                <button
+                  className="w-full text-alerta text-sm font-medium py-2"
+                  onClick={() => void eliminar(editando)}
+                >
+                  Eliminar tarea
+                </button>
+              )}
+            </>
+          }
+        >
 
             <input
               autoFocus
@@ -209,29 +229,7 @@ export default function Pendientes() {
               />
             </label>
 
-            <div className="flex gap-2 pt-1">
-              <button className="btn-ghost flex-1" onClick={cerrar}>
-                Cancelar
-              </button>
-              <button
-                className="btn-primary flex-1"
-                onClick={() => void enviar()}
-                disabled={!titulo.trim() || guardar.isPending}
-              >
-                Guardar
-              </button>
-            </div>
-
-            {editando && (
-              <button
-                className="w-full text-alerta text-sm font-medium py-2"
-                onClick={() => void eliminar(editando)}
-              >
-                Eliminar tarea
-              </button>
-            )}
-          </div>
-        </div>
+        </HojaInferior>
       )}
     </>
   )

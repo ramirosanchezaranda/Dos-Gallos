@@ -38,4 +38,8 @@
   .badge-green  { @apply bg-verde-100 text-verde-800 text-xs font-semibold px-2 py-0.5 rounded-full; }
   .badge-red    { @apply bg-red-100   text-red-700   text-xs font-semibold px-2 py-0.5 rounded-full; }
   .badge-amber  { @apply bg-amber-100 text-amber-700 text-xs font-semibold px-2 py-0.5 rounded-full; }
+
+  /* Deja libre la franja del gesto de inicio en los celulares que la tienen.
+     La barra de abajo ya usaba esta clase, pero nunca estuvo definida. */
+  .safe-area-inset-bottom { padding-bottom: env(safe-area-inset-bottom); }
 }

@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { PageHeader } from '../components/PageHeader'
+import { HojaInferior } from '../components/HojaInferior'
 import { IconPlus } from '../components/Icons'
 import {
   useFacturas,
@@ -56,7 +57,7 @@ const vacio = (): Borrador => ({
 
 const desde = (f: Factura): Borrador => ({
   tipo: f.tipo,
-  numero: f.numero,
+  numero: f.numero ?? '',
   proveedor_id: f.proveedor_id,
   fecha_emision: f.fecha_emision,
   fecha_vencimiento: f.fecha_vencimiento ?? '',
@@ -123,7 +124,7 @@ export default function Facturas() {
 
   const enviar = async () => {
     const total = parseFloat(b.total)
-    if (!b.numero.trim() || !total) return
+    if (!total) return
 
     let proveedor_id = b.proveedor_id
     if (nuevoProv.trim()) {
@@ -134,7 +135,7 @@ export default function Facturas() {
     await guardar.mutateAsync({
       id: editando?.id,
       tipo: b.tipo,
-      numero: b.numero.trim(),
+      numero: b.numero.trim() || null,
       proveedor_id,
       fecha_emision: b.fecha_emision,
       fecha_vencimiento: b.fecha_vencimiento || null,
@@ -152,7 +153,7 @@ export default function Facturas() {
   }
 
   const eliminar = async (f: Factura) => {
-    if (!confirm(`¿Eliminar la factura ${f.numero}?`)) return
+    if (!confirm(`¿Eliminar la factura ${f.numero ?? 'sin número'}?`)) return
     await borrar.mutateAsync(f.id)
     cerrar()
   }
@@ -217,7 +218,8 @@ export default function Facturas() {
                         {f.proveedor_id ? nombreProv[f.proveedor_id] : 'Sin proveedor'}
                       </p>
                       <p className="text-xs text-verde-700">
-                        Tipo {f.tipo} · {f.numero}
+                        Tipo {f.tipo}
+                        {f.numero ? ` · ${f.numero}` : ' · sin número'}
                       </p>
                     </div>
                     <span className={`${BADGE[est]} shrink-0`}>{LABEL[est]}</span>
@@ -266,15 +268,34 @@ export default function Facturas() {
 
       {/* ─── Formulario ─── */}
       {abierto && (
-        <div className="fixed inset-0 z-50 bg-black/40 flex items-end" onClick={cerrar}>
-          <div
-            className="bg-hueso w-full max-w-lg mx-auto rounded-t-3xl max-h-[90vh] overflow-y-auto p-4 space-y-3"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="w-10 h-1 bg-verde-200 rounded-full mx-auto" />
-            <h2 className="font-bold text-verde-900">
-              {editando ? 'Editar factura' : 'Nueva factura'}
-            </h2>
+        <HojaInferior
+          titulo={editando ? 'Editar factura' : 'Nueva factura'}
+          onCerrar={cerrar}
+          acciones={
+            <>
+              <div className="flex gap-2">
+                <button className="btn-ghost flex-1" onClick={cerrar}>
+                  Cancelar
+                </button>
+                <button
+                  className="btn-primary flex-1"
+                  onClick={() => void enviar()}
+                  disabled={!b.total || guardar.isPending}
+                >
+                  Guardar
+                </button>
+              </div>
+              {editando && (
+                <button
+                  className="w-full text-alerta text-sm font-medium py-2"
+                  onClick={() => void eliminar(editando)}
+                >
+                  Eliminar factura
+                </button>
+              )}
+            </>
+          }
+        >
 
             <div>
               <span className="text-xs text-verde-700 font-medium">Tipo</span>
@@ -294,7 +315,7 @@ export default function Facturas() {
             </div>
 
             <label className="block">
-              <span className="text-xs text-verde-700 font-medium">Número</span>
+              <span className="text-xs text-verde-700 font-medium">Número (opcional)</span>
               <input
                 value={b.numero}
                 onChange={(e) => setB({ ...b, numero: e.target.value })}
@@ -382,29 +403,7 @@ export default function Facturas() {
               Al cargar el neto se calcula el IVA 21% y el total. Podés corregirlos.
             </p>
 
-            <div className="flex gap-2 pt-2">
-              <button className="btn-ghost flex-1" onClick={cerrar}>
-                Cancelar
-              </button>
-              <button
-                className="btn-primary flex-1"
-                onClick={() => void enviar()}
-                disabled={!b.numero.trim() || !b.total || guardar.isPending}
-              >
-                Guardar
-              </button>
-            </div>
-
-            {editando && (
-              <button
-                className="w-full text-alerta text-sm font-medium py-2"
-                onClick={() => void eliminar(editando)}
-              >
-                Eliminar factura
-              </button>
-            )}
-          </div>
-        </div>
+        </HojaInferior>
       )}
     </>
   )

@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { PageHeader } from '../components/PageHeader'
+import { HojaInferior } from '../components/HojaInferior'
 import { IconPlus } from '../components/Icons'
 import {
   useGastos,
@@ -222,15 +223,34 @@ export default function Gastos() {
 
       {/* ─── Formulario ─── */}
       {abierto && (
-        <div className="fixed inset-0 z-50 bg-black/40 flex items-end" onClick={cerrar}>
-          <div
-            className="bg-hueso w-full max-w-lg mx-auto rounded-t-3xl max-h-[90vh] overflow-y-auto p-4 space-y-3"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="w-10 h-1 bg-verde-200 rounded-full mx-auto" />
-            <h2 className="font-bold text-verde-900">
-              {editando ? 'Editar gasto' : 'Nuevo gasto'}
-            </h2>
+        <HojaInferior
+          titulo={editando ? 'Editar gasto' : 'Nuevo gasto'}
+          onCerrar={cerrar}
+          acciones={
+            <>
+              <div className="flex gap-2">
+                <button className="btn-ghost flex-1" onClick={cerrar}>
+                  Cancelar
+                </button>
+                <button
+                  className="btn-primary flex-1"
+                  onClick={() => void enviar()}
+                  disabled={!b.monto || guardar.isPending}
+                >
+                  Guardar
+                </button>
+              </div>
+              {editando && (
+                <button
+                  className="w-full text-alerta text-sm font-medium py-2"
+                  onClick={() => void eliminar(editando)}
+                >
+                  Eliminar gasto
+                </button>
+              )}
+            </>
+          }
+        >
 
             <div className="grid grid-cols-2 gap-3">
               <label className="block">
@@ -320,29 +340,7 @@ export default function Gastos() {
               </div>
             </div>
 
-            <div className="flex gap-2 pt-2">
-              <button className="btn-ghost flex-1" onClick={cerrar}>
-                Cancelar
-              </button>
-              <button
-                className="btn-primary flex-1"
-                onClick={() => void enviar()}
-                disabled={!b.monto || guardar.isPending}
-              >
-                Guardar
-              </button>
-            </div>
-
-            {editando && (
-              <button
-                className="w-full text-alerta text-sm font-medium py-2"
-                onClick={() => void eliminar(editando)}
-              >
-                Eliminar gasto
-              </button>
-            )}
-          </div>
-        </div>
+        </HojaInferior>
       )}
     </>
   )

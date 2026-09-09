@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { PageHeader } from '../components/PageHeader'
+import { HojaInferior } from '../components/HojaInferior'
 import { IconPlus } from '../components/Icons'
 import {
   useProductos,
@@ -248,15 +249,34 @@ export default function Productos() {
 
       {/* ─── Alta / edición ─── */}
       {(creando || editando) && (
-        <div className="fixed inset-0 z-50 bg-black/40 flex items-end" onClick={cerrar}>
-          <div
-            className="bg-hueso w-full max-w-lg mx-auto rounded-t-3xl max-h-[90vh] overflow-y-auto p-4 space-y-3"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="w-10 h-1 bg-verde-200 rounded-full mx-auto" />
-            <h2 className="font-bold text-verde-900">
-              {editando ? 'Editar producto' : 'Nuevo producto'}
-            </h2>
+        <HojaInferior
+          titulo={editando ? 'Editar producto' : 'Nuevo producto'}
+          onCerrar={cerrar}
+          acciones={
+            <>
+              <div className="flex gap-2">
+                <button className="btn-ghost flex-1" onClick={cerrar}>
+                  Cancelar
+                </button>
+                <button
+                  className="btn-primary flex-1"
+                  onClick={() => void guardar()}
+                  disabled={!puedeGuardar || crear.isPending || editar.isPending}
+                >
+                  Guardar
+                </button>
+              </div>
+              {editando && (
+                <button
+                  className="w-full text-alerta text-sm font-medium py-2"
+                  onClick={() => void confirmarBorrado(editando)}
+                >
+                  Eliminar producto
+                </button>
+              )}
+            </>
+          }
+        >
 
             <label className="block">
               <span className="text-xs text-verde-700 font-medium">Nombre</span>
@@ -419,34 +439,12 @@ export default function Productos() {
               <span className="text-sm text-verde-800">Producto activo (aparece en la venta)</span>
             </label>
 
-            <div className="flex gap-2 pt-2">
-              <button className="btn-ghost flex-1" onClick={cerrar}>
-                Cancelar
-              </button>
-              <button
-                className="btn-primary flex-1"
-                onClick={() => void guardar()}
-                disabled={!puedeGuardar || crear.isPending || editar.isPending}
-              >
-                Guardar
-              </button>
-            </div>
-
-            {editando && (
-              <button
-                className="w-full text-alerta text-sm font-medium py-2"
-                onClick={() => void confirmarBorrado(editando)}
-              >
-                Eliminar producto
-              </button>
-            )}
-          </div>
-        </div>
+        </HojaInferior>
       )}
 
       {/* ─── Ingreso / ajuste de stock ─── */}
       {ingreso && (
-        <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4"
+        <div className="fixed inset-0 z-60 bg-black/40 flex items-center justify-center p-4"
              onClick={() => setIngreso(null)}>
           <div className="bg-hueso rounded-2xl p-4 w-full max-w-sm space-y-3"
                onClick={(e) => e.stopPropagation()}>

@@ -53,9 +53,9 @@ export function SelectorProducto({
     precioTicket === undefined ? null : coincidePrecio(p, precioTicket)
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/40 flex items-end" onClick={onCerrar}>
+    <div className="fixed inset-0 z-60 bg-black/40 flex items-end" onClick={onCerrar}>
       <div
-        className="bg-hueso w-full max-w-lg mx-auto rounded-t-3xl max-h-[85vh] flex flex-col"
+        className="bg-hueso w-full max-w-lg mx-auto rounded-t-3xl max-h-[85dvh] flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Cabecera */}
@@ -78,7 +78,7 @@ export function SelectorProducto({
         </div>
 
         {/* Lista */}
-        <div className="overflow-y-auto px-4 pb-6 flex-1">
+        <div className="overflow-y-auto px-4 pb-[max(1.5rem,env(safe-area-inset-bottom))] flex-1 min-h-0">
           {lista.length === 0 && (
             <p className="text-center text-verde-700 text-sm py-8">
               No hay productos que coincidan con "{busqueda}"
