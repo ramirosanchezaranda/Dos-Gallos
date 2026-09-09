@@ -16,8 +16,10 @@ export interface SugerenciaCompra {
   promedioVentaDiaria: number
   /** Días que dura el stock. `null` si no hubo ventas en la ventana. */
   diasRestantes: number | null
-  /** Cuánto comprar para cubrir los próximos días. */
+  /** Cuánto comprar. */
   sugerido: number
+  /** De dónde sale el número, para poder decirlo en pantalla. */
+  motivo: 'ritmo' | 'minimo'
 }
 
 /** Días de stock que se quieren tener cubiertos. */
@@ -43,6 +45,14 @@ export function useComprarManana() {
       continue
     }
 
+    // Con ventas se compra para cubrir los próximos días. Sin ventas no hay
+    // ritmo que proyectar, y el mínimo cargado es la única referencia que hay
+    // — mejor que no sugerir nada y dejar la fila sin número.
+    const conRitmo = f.velocidad > 0
+    const falta = conRitmo
+      ? f.velocidad * DIAS_OBJETIVO - f.stock
+      : (minimoPorProducto.get(f.producto_id) ?? 0) - f.stock
+
     sugerencias.push({
       producto_id: f.producto_id,
       nombre: f.nombre,
@@ -50,7 +60,8 @@ export function useComprarManana() {
       unidad: f.unidad,
       promedioVentaDiaria: f.velocidad,
       diasRestantes: f.diasDeStock === null ? null : Math.round(f.diasDeStock),
-      sugerido: Math.round(Math.max(0, f.velocidad * DIAS_OBJETIVO - f.stock) * 10) / 10,
+      sugerido: Math.round(Math.max(0, falta) * 10) / 10,
+      motivo: conRitmo ? 'ritmo' : 'minimo',
     })
   }
 

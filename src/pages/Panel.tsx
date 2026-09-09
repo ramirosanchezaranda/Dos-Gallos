@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { PageHeader } from '../components/PageHeader'
 import { IconTrend, IconBox, IconCamera } from '../components/Icons'
@@ -11,7 +12,7 @@ import { useAuth } from '../hooks/useAuth'
 import { useComprarManana } from '../hooks/useComprarManana'
 import { CardTurno } from '../components/CardTurno'
 import { porTurno } from '../lib/turnos'
-import { pesos, cantidad as fmtCantidad, fechaLarga } from '../lib/formato'
+import { pesos, cantidad as fmtCantidad, fechaLarga, diaYFecha } from '../lib/formato'
 
 export default function Panel() {
   const { data: productos = [] } = useProductos()
@@ -37,6 +38,7 @@ export default function Panel() {
   })
   const tareasAltas = tareas.filter((t) => t.estado !== 'hecho' && t.prioridad === 'alta')
   const { sugerencias } = useComprarManana()
+  const [verTodo, setVerTodo] = useState(false)
 
   return (
     <>
@@ -152,14 +154,16 @@ export default function Panel() {
               <Link to="/pedidos" className="text-xs text-verde-700 font-medium">Ver pedidos →</Link>
             </div>
             <div className="card space-y-2 bg-verde-50 border-verde-200">
-              {sugerencias.slice(0, 5).map((s) => (
+              {(verTodo ? sugerencias : sugerencias.slice(0, 5)).map((s) => (
                 <div key={s.producto_id} className="flex items-center justify-between gap-2">
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-verde-900 truncate">{s.nombre}</p>
                     <p className="text-[11px] text-verde-700/70">
-                      Stock: {fmtCantidad(s.stockActual, s.unidad as 'kg' | 'unidad')}
+                      {fmtCantidad(s.stockActual, s.unidad as 'kg' | 'unidad')}
                       {s.diasRestantes !== null
                         ? ` · para ${s.diasRestantes === 0 ? 'hoy' : `${s.diasRestantes}d`}`
+                        : s.motivo === 'minimo'
+                        ? ' · bajo mínimo'
                         : ' · sin ventas recientes'}
                     </p>
                   </div>
@@ -171,19 +175,29 @@ export default function Panel() {
                 </div>
               ))}
               {sugerencias.length > 5 && (
-                <p className="text-xs text-verde-700/60 pt-1">
-                  +{sugerencias.length - 5} más · basado en ventas de los últimos 28 días
-                </p>
+                <button
+                  onClick={() => setVerTodo((v) => !v)}
+                  className="w-full text-xs text-verde-700 font-medium pt-2 border-t border-verde-200 text-left"
+                >
+                  {verTodo
+                    ? 'Ver menos'
+                    : `Ver los ${sugerencias.length} productos`}
+                </button>
               )}
             </div>
           </div>
         )}
 
         <div>
-          <div className="flex items-baseline justify-between mb-2">
-            <h2 className="font-semibold text-verde-900">Ventas de hoy</h2>
+          <div className="flex items-baseline justify-between gap-2 mb-2">
+            <div className="min-w-0">
+              <h2 className="font-semibold text-verde-900">Ventas de hoy</h2>
+              <p className="text-xs text-verde-700/70 first-letter:uppercase">
+                {diaYFecha(new Date().toISOString())}
+              </p>
+            </div>
             {totalHoy > 0 && (
-              <span className="text-sm font-bold text-verde-800">{pesos(totalHoy)}</span>
+              <span className="text-sm font-bold text-verde-800 shrink-0">{pesos(totalHoy)}</span>
             )}
           </div>
           <div className="space-y-2">

@@ -21,6 +21,25 @@ export const fechaCorta = (iso: string): string =>
 export const fechaLarga = (iso: string): string =>
   new Date(iso).toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' })
 
+/**
+ * Una clave `2026-09-08` sola la lee como medianoche UTC y en Argentina cae
+ * el día anterior. Con la hora explícita queda en horario local.
+ */
+const comoFecha = (iso: string): Date =>
+  new Date(/^\d{4}-\d{2}-\d{2}$/.test(iso) ? `${iso}T00:00:00` : iso)
+
+/** Fecha sin ceros a la izquierda: `8/9/26`. */
+export const fechaNumerica = (iso: string): string =>
+  comoFecha(iso).toLocaleDateString('es-AR', {
+    day: 'numeric',
+    month: 'numeric',
+    year: '2-digit',
+  })
+
+/** Día y fecha juntos, como se anota una jornada: `lunes 8/9/26`. */
+export const diaYFecha = (iso: string): string =>
+  `${comoFecha(iso).toLocaleDateString('es-AR', { weekday: 'long' })} ${fechaNumerica(iso)}`
+
 export const horaCorta = (iso: string): string =>
   new Date(iso).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })
 

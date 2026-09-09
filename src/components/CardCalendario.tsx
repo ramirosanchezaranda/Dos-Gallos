@@ -4,14 +4,7 @@ import { CardTurno } from './CardTurno'
 import { useVentasDeFecha } from '../hooks/useVentas'
 import { porTurno, totalesPorDia } from '../lib/turnos'
 import type { VentaResumen } from '../lib/estadisticas'
-import { pesos } from '../lib/formato'
-
-const largo = (dia: string) =>
-  new Date(`${dia}T00:00:00`).toLocaleDateString('es-AR', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-  })
+import { pesos, diaYFecha } from '../lib/formato'
 
 export function CardCalendario({ ventas }: { ventas: VentaResumen[] }) {
   const [dia, setDia] = useState<string | null>(null)
@@ -32,7 +25,7 @@ export function CardCalendario({ ventas }: { ventas: VentaResumen[] }) {
       {dia && (
         <div className="mt-4 pt-3 border-t border-verde-100 space-y-2">
           <div className="flex items-baseline justify-between gap-2">
-            <p className="text-sm font-semibold text-verde-900 first-letter:uppercase">{largo(dia)}</p>
+            <p className="text-sm font-semibold text-verde-900 first-letter:uppercase">{diaYFecha(dia)}</p>
             <span className="text-sm font-bold text-verde-800 shrink-0">{pesos(total)}</span>
           </div>
 
