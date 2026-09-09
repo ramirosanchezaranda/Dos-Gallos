@@ -1,4 +1,4 @@
-import { parseNumero, aLineas, forzarDigitos } from './normalize'
+import { parseNumero, aLineas, forzarDigitos, CLASE_DIGITO } from './normalize'
 
 /**
  * Parser de tickets de la balanza de Dos Gallos.
@@ -75,8 +75,12 @@ const TOLERANCIA = 0.02
  * Todo lo que sigue a `kg` es opcional: si el OCR se comió el precio, el
  * renglón se detecta igual y `reconciliarItem` lo recupera del importe.
  */
-const RE_ITEM =
-  /([\d.,OoIlSsBZq|]+)\s*[kK][gG9qoO0a]?(?:\s*\S{0,2}\s*([\d.,OoIlSsBZq|]{2,}))?/
+const N = `[${CLASE_DIGITO}]`
+// El separador solo puede ser algo que NO parezca un dígito: aceptando
+// cualquier caracter se comía el arranque del precio (`11000` quedaba en
+// `000`), que es justo lo que hay que leer bien.
+const SEP = `[^\\s${CLASE_DIGITO}]{0,2}`
+const RE_ITEM = new RegExp(`(${N}+)\\s*[kK][gG9qoO0a]?(?:\\s*${SEP}\\s*(${N}{2,}))?`)
 
 /**
  * `1 U @ 1500.00$/U` — el renglón por unidad, que no lleva peso.
@@ -84,17 +88,16 @@ const RE_ITEM =
  * La `U` va sola entre espacios; pedirla así evita confundirla con la `U`
  * de otras palabras del ticket.
  */
-const RE_ITEM_UNIDAD =
-  /(?:^|\s)([\d OoIlSsB|]{1,3})\s+[uU]\s*\S{0,2}?\s*([\d.,OoIlSsBZq|]{2,})/
+const RE_ITEM_UNIDAD = new RegExp(`(?:^|\\s)(${N}{1,3})\\s+[uU]\\s*${SEP}\\s*(${N}{2,})`)
 
 /** Importe suelto a la derecha: `1720.00$` */
-const RE_IMPORTE = /([\d.,OoIlSsBZq|]+)\s*\$/
+const RE_IMPORTE = new RegExp(`(${N}+)\\s*\\$`)
 
 /** `01 ART.   TOTAL =  1720.00$` */
-const RE_TOTAL = /([\d OoIlSsB]{1,3})\s*ART[.\s]*TOTAL\s*[=:]?\s*([\d.,OoIlSsBZq|]+)/i
+const RE_TOTAL = new RegExp(`(${N}{1,3})\\s*ART[.\\s]*TOTAL\\s*[=:]?\\s*(${N}+)`, 'i')
 
 /** `TOTAL = 1720.00$` sin contador de artículos. */
-const RE_TOTAL_SIMPLE = /TOTAL\s*[=:]?\s*([\d.,OoIlSsBZq|]+)/i
+const RE_TOTAL_SIMPLE = new RegExp(`TOTAL\\s*[=:]?\\s*(${N}+)`, 'i')
 
 const RE_NUMERO = /\bT[.\s:]*(\d{2,6})\b/
 const RE_FECHA = /FECHA\s*[:.]?\s*(\d{1,2})\s*[/.,-]\s*(\d{1,2})\s*[/.,-]\s*(\d{2,4})/i

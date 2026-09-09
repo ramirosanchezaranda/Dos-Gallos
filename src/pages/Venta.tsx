@@ -6,6 +6,7 @@ import { useProductos } from '../hooks/useProductos'
 import { useRegistrarVenta } from '../hooks/useVentas'
 import { preprocesarImagen } from '../lib/ocr/preprocess'
 import { parseTicket, type TicketParseado } from '../lib/ticket/parseTicket'
+import { ajustarTicket } from '../lib/ticket/ajustarConCatalogo'
 import type { MetodoPago, Producto } from '../types/db'
 import { pesos, idLocal, cantidad as fmtCantidad } from '../lib/formato'
 import { coincidePrecio, precioDe, tieneOferta, type TipoPrecio } from '../lib/precio'
@@ -66,7 +67,15 @@ export default function Venta() {
       // abrir la app en el mostrador siga siendo instantáneo.
       const { getOcrProvider } = await import('../lib/ocr/tesseract')
       const ocr = await getOcrProvider().reconocer(canvas, setProgreso)
-      const parseado = parseTicket(ocr.texto)
+      const leido = parseTicket(ocr.texto)
+
+      // Los precios cargados corrigen la lectura: la balanza cobra siempre a
+      // uno de ellos, así que alcanza con que el OCR caiga cerca del correcto.
+      const precios = [...new Set(productos.filter((p) => p.activo && p.precio > 0).map((p) => p.precio))]
+      const parseado = {
+        ...leido,
+        items: ajustarTicket(leido.items, precios, leido.total),
+      }
 
       setTicket(parseado)
       setRenglones(

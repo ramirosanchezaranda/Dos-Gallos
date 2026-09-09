@@ -24,6 +24,18 @@ export function forzarDigitos(s: string): string {
 }
 
 /**
+ * Interior de clase de caracteres con todo lo que puede ser un dígito.
+ *
+ * Se arma desde la misma tabla que hace la conversión para que no queden dos
+ * listas que se desincronizan: pasaba que el peso `1.150` salía `1.i50` y la
+ * expresión del renglón no lo capturaba, así que `forzarDigitos` —que sí
+ * sabe que la `i` es un `1`— nunca llegaba a verlo.
+ */
+export const CLASE_DIGITO = `\\d.,${Object.keys(OCR_A_DIGITO)
+  .map((c) => (/[\]\\^-]/.test(c) ? `\\${c}` : c))
+  .join('')}`
+
+/**
  * Parsea un número de ticket a float.
  *
  * La balanza imprime `0.430`, `4000.00`, `1720.00`: punto decimal y sin
