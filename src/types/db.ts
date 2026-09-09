@@ -20,6 +20,8 @@ export interface Categoria {
   nombre: string
   emoji: string | null
   orden: number
+  /** Días que aguanta el producto antes de perderse. */
+  vida_util_dias: number
 }
 
 export interface Producto {

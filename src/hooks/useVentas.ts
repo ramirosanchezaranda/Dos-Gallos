@@ -19,6 +19,27 @@ export function useVentasDelDia() {
   })
 }
 
+/** Ventas completas de un día puntual. Solo consulta cuando hay día elegido. */
+export function useVentasDeFecha(dia: string | null) {
+  return useQuery({
+    queryKey: ['ventas', 'fecha', dia],
+    enabled: !!dia,
+    queryFn: async (): Promise<Venta[]> => {
+      const desde = new Date(`${dia}T00:00:00`)
+      const hasta = new Date(desde)
+      hasta.setDate(hasta.getDate() + 1)
+      const { data, error } = await supabase
+        .from('ventas')
+        .select('*')
+        .gte('fecha', desde.toISOString())
+        .lt('fecha', hasta.toISOString())
+        .order('fecha')
+      if (error) throw error
+      return data as Venta[]
+    },
+  })
+}
+
 export function useUltimasVentas(limite = 20) {
   return useQuery({
     queryKey: ['ventas', 'ultimas', limite],

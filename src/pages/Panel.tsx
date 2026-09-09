@@ -9,7 +9,9 @@ import { useFacturas, estadoReal, diasParaVencer } from '../hooks/useFacturas'
 import { useTareas } from '../hooks/useTareas'
 import { useAuth } from '../hooks/useAuth'
 import { useComprarManana } from '../hooks/useComprarManana'
-import { pesos, cantidad as fmtCantidad, horaCorta, fechaLarga } from '../lib/formato'
+import { CardTurno } from '../components/CardTurno'
+import { porTurno } from '../lib/turnos'
+import { pesos, cantidad as fmtCantidad, fechaLarga } from '../lib/formato'
 
 export default function Panel() {
   const { data: productos = [] } = useProductos()
@@ -20,6 +22,7 @@ export default function Panel() {
   const { salir } = useAuth()
 
   const totalHoy = ventasHoy.reduce((a, v) => a + Number(v.total), 0)
+  const turnosHoy = porTurno(ventasHoy)
 
   const hoyFecha = new Date()
   const inicioMes = new Date(hoyFecha.getFullYear(), hoyFecha.getMonth(), 1)
@@ -49,7 +52,7 @@ export default function Panel() {
       <div className="p-4 space-y-4">
         <div>
           <p className="font-semibold text-verde-900">¡Buen día!</p>
-          <p className="text-sm text-verde-700 capitalize">{fechaLarga(new Date().toISOString())}</p>
+          <p className="text-sm text-verde-700 first-letter:uppercase">{fechaLarga(new Date().toISOString())}</p>
         </div>
 
         {/* Los tres llevan a estadísticas: son el resumen, el detalle está allá. */}
@@ -177,30 +180,17 @@ export default function Panel() {
         )}
 
         <div>
-          <h2 className="font-semibold text-verde-900 mb-2">Ventas de hoy</h2>
-          {ventasHoy.length === 0 ? (
-            <div className="card text-center text-verde-700 text-sm py-8">
-              Todavía no hay ventas registradas
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {ventasHoy.map((v) => (
-                <div key={v.id} className="card flex items-center justify-between">
-                  <div>
-                    <p className="font-medium text-sm">
-                      {horaCorta(v.fecha)}
-                      {v.ticket_nro && ` · Ticket ${v.ticket_nro}`}
-                    </p>
-                    <p className="text-xs text-verde-700">
-                      {v.origen === 'ocr' ? '📷 Desde ticket' : '✍️ Manual'}
-                      {v.metodo_pago && ` · ${v.metodo_pago}`}
-                    </p>
-                  </div>
-                  <span className="font-bold text-verde-900">{pesos(Number(v.total))}</span>
-                </div>
-              ))}
-            </div>
-          )}
+          <div className="flex items-baseline justify-between mb-2">
+            <h2 className="font-semibold text-verde-900">Ventas de hoy</h2>
+            {totalHoy > 0 && (
+              <span className="text-sm font-bold text-verde-800">{pesos(totalHoy)}</span>
+            )}
+          </div>
+          <div className="space-y-2">
+            {turnosHoy.map((b) => (
+              <CardTurno key={b.turno} bloque={b} />
+            ))}
+          </div>
         </div>
       </div>
     </>

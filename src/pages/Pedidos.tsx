@@ -128,7 +128,7 @@ function PanelNuevo({
           {items.map((it, idx) => (
             <div key={idx} className="card flex items-start justify-between gap-2 py-3">
               <div className="flex-1 min-w-0">
-                <p className="font-medium text-verde-900 text-sm capitalize">{it.descripcion}</p>
+                <p className="font-medium text-verde-900 text-sm first-letter:uppercase">{it.descripcion}</p>
                 <p className="text-xs text-verde-700/70 mt-0.5">
                   {it.cantidad} {it.unidad}
                   {it.estimadoKg ? ` · ~${it.estimadoKg} kg` : ''}
@@ -236,7 +236,7 @@ function PanelRecibo({
       <div className="space-y-2">
         {(rows.length ? rows : displayRows).map((r) => (
           <div key={r.id} className="card space-y-1">
-            <p className="text-sm font-medium capitalize">{r.descripcion}</p>
+            <p className="text-sm font-medium first-letter:uppercase">{r.descripcion}</p>
             <div className="flex items-center gap-3">
               <span className="text-xs text-verde-700/60">
                 Pedido: {r.cantidad_pedida} {r.unidad}
