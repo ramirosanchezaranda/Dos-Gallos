@@ -133,3 +133,32 @@ export interface ItemVentaRPC {
   cantidad: number
   precio_unitario: number
 }
+
+export type EstadoPedido = 'pendiente' | 'parcial' | 'recibido'
+
+export interface Pedido {
+  id: string
+  proveedor: string | null
+  fecha: string
+  estado: EstadoPedido
+  costo_total: number | null
+  notas: string | null
+  created_at: string
+}
+
+export interface PedidoItem {
+  id: string
+  pedido_id: string
+  producto_id: string | null
+  descripcion: string
+  cantidad_pedida: number
+  unidad: string
+  cantidad_estimada_kg: number | null
+  cantidad_recibida: number | null
+  created_at: string
+}
+
+/** PedidoItem con el nombre del producto resuelto (join). */
+export interface PedidoItemConProducto extends PedidoItem {
+  producto_nombre: string | null
+}

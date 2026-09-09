@@ -47,6 +47,14 @@ export const IconChevronRight = (p: React.SVGProps<SVGSVGElement>) => (
     <polyline points="9 18 15 12 9 6"/>
   </svg>
 )
+export const IconTruck = (p: React.SVGProps<SVGSVGElement>) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} {...p}>
+    <rect x="1" y="3" width="15" height="13" rx="1" strokeLinejoin="round"/>
+    <path d="M16 8h4l3 5v4h-7V8z" strokeLinejoin="round"/>
+    <circle cx="5.5" cy="18.5" r="2.5"/>
+    <circle cx="18.5" cy="18.5" r="2.5"/>
+  </svg>
+)
 export const IconTrend = (p: React.SVGProps<SVGSVGElement>) => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} {...p}>
     <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>

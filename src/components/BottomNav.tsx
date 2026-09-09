@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom'
-import { IconHome, IconCamera, IconBox, IconCash, IconReceipt, IconCheck } from './Icons'
+import { IconHome, IconCamera, IconBox, IconCash, IconReceipt, IconTruck } from './Icons'
 
 const links = [
   { to: '/',          icon: IconHome,    label: 'Panel' },
@@ -7,7 +7,7 @@ const links = [
   { to: '/productos', icon: IconBox,     label: 'Stock' },
   { to: '/gastos',    icon: IconCash,    label: 'Gastos' },
   { to: '/facturas',  icon: IconReceipt, label: 'Facturas' },
-  { to: '/pendientes',icon: IconCheck,   label: 'Pendientes' },
+  { to: '/pedidos',   icon: IconTruck,   label: 'Pedidos' },
 ]
 
 export function BottomNav() {

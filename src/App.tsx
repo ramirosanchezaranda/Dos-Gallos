@@ -10,6 +10,7 @@ import Gastos from './pages/Gastos'
 import Facturas from './pages/Facturas'
 import Pendientes from './pages/Pendientes'
 import Estadisticas from './pages/Estadisticas'
+import Pedidos from './pages/Pedidos'
 
 const qc = new QueryClient({
   defaultOptions: { queries: { retry: 1, refetchOnWindowFocus: false } },
@@ -37,6 +38,7 @@ function Rutas() {
         <Route path="gastos" element={<Gastos />} />
         <Route path="facturas" element={<Facturas />} />
         <Route path="pendientes" element={<Pendientes />} />
+        <Route path="pedidos" element={<Pedidos />} />
         <Route path="estadisticas" element={<Estadisticas />} />
       </Route>
     </Routes>

@@ -13,7 +13,8 @@ import {
   suma,
   claveDia,
 } from '../lib/estadisticas'
-import { pesos, kilos } from '../lib/formato'
+import { pesos, kilos, cantidad as fmtCantidad } from '../lib/formato'
+import { useComprarManana } from '../hooks/useComprarManana'
 
 const METODO: Record<string, string> = {
   efectivo: 'Efectivo',
@@ -34,6 +35,7 @@ export default function Estadisticas() {
   const { data: ventas = [], isLoading } = useVentasVentana()
   const { data: items = [] } = useItemsVentana()
   const { data: gastos = [] } = useGastosVentana()
+  const { sugerencias: rotacion } = useComprarManana()
 
   const d = useMemo(() => {
     const esteMes = inicioMes(0)
@@ -235,6 +237,52 @@ export default function Estadisticas() {
                     detalle: `${m.ventas} vta${m.ventas === 1 ? '' : 's'}`,
                   }))}
                 />
+              )}
+            </div>
+
+            {/* ─── Rotación ─── */}
+            <div className="card">
+              <h2 className="font-semibold text-verde-900 text-sm mb-0.5">Rotación de stock</h2>
+              <p className="text-xs text-verde-700/60 mb-3">
+                Días que dura el stock al ritmo actual de ventas (28d)
+              </p>
+              {rotacion.length === 0 ? (
+                <p className="text-sm text-verde-700/60 py-4 text-center">
+                  Todo el stock está cubierto por 3 días o más
+                </p>
+              ) : (
+                <div className="space-y-2">
+                  {rotacion.map((s) => {
+                    const color =
+                      s.diasRestantes === null
+                        ? 'bg-gray-100 text-gray-600'
+                        : s.diasRestantes === 0
+                        ? 'bg-red-100 text-red-700'
+                        : s.diasRestantes <= 1
+                        ? 'bg-amber-100 text-amber-700'
+                        : 'bg-verde-100 text-verde-700'
+                    return (
+                      <div key={s.producto_id} className="flex items-center gap-2">
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-verde-900 truncate">{s.nombre}</p>
+                          <p className="text-[11px] text-verde-700/60">
+                            {fmtCantidad(s.stockActual, s.unidad as 'kg' | 'unidad')} ·{' '}
+                            {s.promedioVentaDiaria > 0
+                              ? `${fmtCantidad(s.promedioVentaDiaria, s.unidad as 'kg' | 'unidad')}/día`
+                              : 'sin ventas recientes'}
+                          </p>
+                        </div>
+                        <span className={`text-xs font-bold px-2 py-0.5 rounded-full shrink-0 ${color}`}>
+                          {s.diasRestantes === null
+                            ? '—'
+                            : s.diasRestantes === 0
+                            ? 'Agotado'
+                            : `${s.diasRestantes}d`}
+                        </span>
+                      </div>
+                    )
+                  })}
+                </div>
               )}
             </div>
 

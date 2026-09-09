@@ -8,6 +8,7 @@ import { suma } from '../lib/estadisticas'
 import { useFacturas, estadoReal, diasParaVencer } from '../hooks/useFacturas'
 import { useTareas } from '../hooks/useTareas'
 import { useAuth } from '../hooks/useAuth'
+import { useComprarManana } from '../hooks/useComprarManana'
 import { pesos, cantidad as fmtCantidad, horaCorta, fechaLarga } from '../lib/formato'
 
 export default function Panel() {
@@ -32,6 +33,7 @@ export default function Panel() {
     return estadoReal(f) === 'pendiente' && d !== null && d >= 0 && d <= 7
   })
   const tareasAltas = tareas.filter((t) => t.estado !== 'hecho' && t.prioridad === 'alta')
+  const { sugerencias } = useComprarManana()
 
   return (
     <>
@@ -136,6 +138,40 @@ export default function Panel() {
                   </span>
                 </div>
               ))}
+            </div>
+          </div>
+        )}
+
+        {sugerencias.length > 0 && (
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <h2 className="font-semibold text-verde-900">Comprar mañana</h2>
+              <Link to="/pedidos" className="text-xs text-verde-700 font-medium">Ver pedidos →</Link>
+            </div>
+            <div className="card space-y-2 bg-verde-50 border-verde-200">
+              {sugerencias.slice(0, 5).map((s) => (
+                <div key={s.producto_id} className="flex items-center justify-between gap-2">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-verde-900 truncate">{s.nombre}</p>
+                    <p className="text-[11px] text-verde-700/70">
+                      Stock: {fmtCantidad(s.stockActual, s.unidad as 'kg' | 'unidad')}
+                      {s.diasRestantes !== null
+                        ? ` · para ${s.diasRestantes === 0 ? 'hoy' : `${s.diasRestantes}d`}`
+                        : ' · sin ventas recientes'}
+                    </p>
+                  </div>
+                  {s.sugerido > 0 && (
+                    <span className="text-xs font-semibold text-verde-700 shrink-0 bg-verde-100 px-2 py-0.5 rounded-full">
+                      ~{fmtCantidad(s.sugerido, s.unidad as 'kg' | 'unidad')}
+                    </span>
+                  )}
+                </div>
+              ))}
+              {sugerencias.length > 5 && (
+                <p className="text-xs text-verde-700/60 pt-1">
+                  +{sugerencias.length - 5} más · basado en ventas de los últimos 28 días
+                </p>
+              )}
             </div>
           </div>
         )}
