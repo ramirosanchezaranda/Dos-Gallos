@@ -98,6 +98,30 @@ const RELLENO = new Set(['de', 'del', 'la', 'el', 'los', 'las', 'lo'])
 
 // ─── Separacion en renglones ──────────────────────────────────
 
+/** Marca interna para una "y" que no separa. No existe en el habla. */
+const MARCA = '\u0001'
+
+/**
+ * Hay productos que llevan "y" en el nombre: "Pata y muslo", "Mila de soja y
+ * espinaca". Sin esto, pedir "dos kilos de pata y muslo" salia partido en dos
+ * renglones. Se protegen del mas largo al mas corto para que gane el nombre
+ * completo cuando uno contiene al otro.
+ */
+function protegerNombres(texto: string, catalogo: ProductoDictado[]): string {
+  const conY = catalogo
+    .map((p) => normalizar(p.nombre))
+    .filter((n) => n.includes(' y '))
+    .sort((a, b) => b.length - a.length)
+
+  let salida = texto
+  for (const nombre of conY) {
+    if (salida.includes(nombre)) {
+      salida = salida.split(nombre).join(nombre.replaceAll(' y ', MARCA))
+    }
+  }
+  return salida
+}
+
 /**
  * Parte la frase en renglones. La "y" es el separador natural, pero tambien
  * aparece dentro de "un kilo y medio", asi que esas se protegen antes.
@@ -106,13 +130,13 @@ const RELLENO = new Set(['de', 'del', 'la', 'el', 'los', 'las', 'lo'])
  * y medio kilo de morcilla" ese "y medio" arranca un renglon nuevo, y proteger
  * los dos casos igual se comia el separador.
  */
-function separar(texto: string): string[] {
-  const protegido = texto
+function separar(texto: string, catalogo: ProductoDictado[]): string[] {
+  const protegido = protegerNombres(texto, catalogo)
     .replace(/\b(kilos?|kg|kilogramos?)\s+y\s+medi[oa]\b/g, '$1 ymedio')
     .replace(/\b(kilos?|kg|kilogramos?)\s+y\s+cuarto\b/g, '$1 ycuarto')
   return protegido
     .split(/\s*,\s*|\s+y\s+|\s+mas\s+|\s+tambien\s+/)
-    .map((s) => s.trim())
+    .map((s) => s.replaceAll(MARCA, ' y ').trim())
     .filter(Boolean)
 }
 
@@ -224,7 +248,7 @@ export function parseDictado(texto: string, catalogo: ProductoDictado[]): Dictad
   const limpio = normalizar(texto)
   if (!limpio) return { items: [], advertencias: ['No se escuchó nada'] }
 
-  const items = separar(limpio)
+  const items = separar(limpio, catalogo)
     .map((r) => parseRenglon(r, catalogo))
     // Un pedazo sin producto ni cantidad suele ser ruido ("gracias", "dale").
     .filter((it) => it.producto !== null || it.cantidad !== null)

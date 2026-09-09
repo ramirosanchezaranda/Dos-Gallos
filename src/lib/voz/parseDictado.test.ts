@@ -107,6 +107,22 @@ describe('varios renglones', () => {
     expect(r.items[1]).toMatchObject({ cantidad: 2 })
   })
 
+  it('no parte un producto que lleva "y" en el nombre', () => {
+    const r = parseDictado('dos kilos de pata y muslo', CATALOGO)
+    expect(r.items).toHaveLength(1)
+    expect(r.items[0]).toMatchObject({ cantidad: 2 })
+    expect(r.items[0].producto?.nombre).toBe('Pata y muslo')
+  })
+
+  it('distingue la "y" del nombre de la "y" que separa', () => {
+    const r = parseDictado('un kilo de pata y muslo y medio kilo de chorizo', CATALOGO)
+    expect(r.items).toHaveLength(2)
+    expect(r.items[0].producto?.nombre).toBe('Pata y muslo')
+    expect(r.items[0]).toMatchObject({ cantidad: 1 })
+    expect(r.items[1].producto?.nombre).toBe('Chorizo')
+    expect(r.items[1]).toMatchObject({ cantidad: 0.5 })
+  })
+
   it('separa con coma y con "más"', () => {
     const r = parseDictado('un kilo de alitas, dos de pechugas mas tres provoletas', CATALOGO)
     expect(r.items).toHaveLength(3)
