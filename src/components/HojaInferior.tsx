@@ -22,12 +22,14 @@ interface Props {
 
 export function HojaInferior({ titulo, onCerrar, children, acciones }: Props) {
   return (
-    <div className="fixed inset-0 z-60 bg-black/40 flex items-end" onClick={onCerrar}>
+    <div className="fixed inset-x-0 top-0 z-60 bg-black/40 flex items-end
+                 h-[var(--alto-visible,100dvh)]" onClick={onCerrar}>
       <div
-        // `dvh` y no `vh`: en el navegador del celular la barra de direcciones
-        // entra y sale, y `vh` mide siempre el alto máximo, así que el panel
-        // terminaba más alto que la pantalla visible.
-        className="bg-hueso w-full max-w-lg mx-auto rounded-t-3xl max-h-[90dvh] flex flex-col"
+        // Mide contra lo que de verdad se ve. `dvh` ya contempla la barra de
+        // direcciones del navegador; `--alto-visible` agrega el teclado, que
+        // en Safari no achica nada y tapaba el pie del panel.
+        className="bg-hueso w-full max-w-lg mx-auto rounded-t-3xl flex flex-col
+                   max-h-[min(90dvh,var(--alto-visible,90dvh))]"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="shrink-0 px-4 pt-3 pb-2">

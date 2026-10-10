@@ -3,6 +3,7 @@ import { PageHeader } from '../components/PageHeader'
 import { SelectorProducto } from '../components/SelectorProducto'
 import { IconCamera, IconPlus } from '../components/Icons'
 import { useProductos } from '../hooks/useProductos'
+import { useMasVendidos } from '../hooks/useMasVendidos'
 import { useRegistrarVenta } from '../hooks/useVentas'
 import { preprocesarImagen } from '../lib/ocr/preprocess'
 import { parseTicket, type TicketParseado } from '../lib/ticket/parseTicket'
@@ -54,6 +55,7 @@ export default function Venta() {
 
   const fileRef = useRef<HTMLInputElement>(null)
   const { data: productos = [] } = useProductos()
+  const { data: masVendidos = [] } = useMasVendidos()
   const registrar = useRegistrarVenta()
 
   // ── Captura + OCR ────────────────────────────────────────
@@ -457,6 +459,7 @@ export default function Venta() {
 
       {renglonEditando && (
         <SelectorProducto
+          masVendidos={masVendidos}
           productos={productos}
           elegido={renglonEditando.producto}
           precioTicket={renglonEditando.precioTicket}

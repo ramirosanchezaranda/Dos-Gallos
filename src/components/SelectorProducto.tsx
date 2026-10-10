@@ -12,6 +12,8 @@ interface Props {
    * los productos que están a ese precio, que suelen ser los que buscás.
    */
   precioTicket?: number
+  /** IDs de los que más se venden, para ofrecerlos de un toque. */
+  masVendidos?: string[]
   onElegir: (p: Producto) => void
   onCerrar: () => void
 }
@@ -24,10 +26,19 @@ export function SelectorProducto({
   productos,
   elegido,
   precioTicket,
+  masVendidos = [],
   onElegir,
   onCerrar,
 }: Props) {
   const [busqueda, setBusqueda] = useState('')
+
+  // Atajos: solo con la búsqueda vacía. Apenas escribís, la lista filtrada
+  // es más precisa que cualquier atajo y los chips estorban.
+  const atajos = useMemo(() => {
+    if (busqueda.trim()) return []
+    const porId = new Map(productos.filter((p) => p.activo).map((p) => [p.id, p]))
+    return masVendidos.map((id) => porId.get(id)).filter((p): p is Producto => !!p)
+  }, [productos, masVendidos, busqueda])
 
   const lista = useMemo(() => {
     const activos = productos.filter((p) => p.activo)
@@ -53,9 +64,11 @@ export function SelectorProducto({
     precioTicket === undefined ? null : coincidePrecio(p, precioTicket)
 
   return (
-    <div className="fixed inset-0 z-60 bg-black/40 flex items-end" onClick={onCerrar}>
+    <div className="fixed inset-x-0 top-0 z-60 bg-black/40 flex items-end
+                 h-[var(--alto-visible,100dvh)]" onClick={onCerrar}>
       <div
-        className="bg-hueso w-full max-w-lg mx-auto rounded-t-3xl max-h-[85dvh] flex flex-col"
+        className="bg-hueso w-full max-w-lg mx-auto rounded-t-3xl flex flex-col
+                   max-h-[min(85dvh,var(--alto-visible,85dvh))]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Cabecera */}
@@ -76,6 +89,29 @@ export function SelectorProducto({
                        focus:outline-none focus:border-verde-700"
           />
         </div>
+
+        {/* Atajos a lo que más sale */}
+        {atajos.length > 0 && (
+          <div className="px-4 pb-2 shrink-0">
+            <p className="text-[11px] text-verde-700/60 mb-1.5">Los que más vendés</p>
+            <div className="flex flex-wrap gap-1.5">
+              {atajos.map((p) => (
+                <button
+                  key={p.id}
+                  onClick={() => {
+                    onElegir(p)
+                    onCerrar()
+                  }}
+                  className="px-3 py-1.5 rounded-full bg-verde-100 text-verde-800
+                             text-sm font-medium max-w-full truncate active:scale-95
+                             transition-transform"
+                >
+                  {p.nombre}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Lista */}
         <div className="overflow-y-auto px-4 pb-[max(1.5rem,env(safe-area-inset-bottom))] flex-1 min-h-0">
