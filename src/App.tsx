@@ -3,8 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { AuthProvider, useAuth } from './hooks/useAuth'
 import { AppLayout } from './components/AppLayout'
 import Login from './pages/Login'
-import Panel from './pages/Panel'
-import Venta from './pages/Venta'
+import Ventas from './pages/Ventas'
 import Productos from './pages/Productos'
 import Gastos from './pages/Gastos'
 import Facturas from './pages/Facturas'
@@ -32,8 +31,7 @@ function Rutas() {
   return (
     <Routes>
       <Route element={<AppLayout />}>
-        <Route index element={<Panel />} />
-        <Route path="venta" element={<Venta />} />
+        <Route index element={<Ventas />} />
         <Route path="productos" element={<Productos />} />
         <Route path="gastos" element={<Gastos />} />
         <Route path="facturas" element={<Facturas />} />

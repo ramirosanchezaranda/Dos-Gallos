@@ -66,8 +66,16 @@ export interface Venta {
   metodo_pago: MetodoPago | null
   origen: OrigenVenta
   ticket_nro: string | null
+  /** Ruta del comprobante en el bucket. `null` si se cargó sin foto. */
   ticket_url: string | null
   ocr_raw: string | null
+  /** Lo que se vendió, escrito a mano. */
+  detalle: string | null
+  /**
+   * `false` mientras sea solo la foto. En el apuro del mostrador se saca la
+   * foto y listo; el texto y el importe se cargan cuando hay un respiro.
+   */
+  completa: boolean
   created_at: string
 }
 

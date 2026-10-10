@@ -1,13 +1,17 @@
 import { NavLink } from 'react-router-dom'
-import { IconHome, IconCamera, IconBox, IconCash, IconReceipt, IconTruck } from './Icons'
+import { IconCash, IconReceipt, IconTrend } from './Icons'
 
+/**
+ * Tres secciones nomás.
+ *
+ * Stock, Facturas y Pedidos quedan en pausa: las pantallas siguen en el
+ * código y sus rutas andan, pero no se ofrecen. Lo que importa ahora es
+ * cargar la venta rápido, y cada ícono de más es una cosa menos clara.
+ */
 const links = [
-  { to: '/',          icon: IconHome,    label: 'Panel' },
-  { to: '/venta',     icon: IconCamera,  label: 'Venta' },
-  { to: '/productos', icon: IconBox,     label: 'Stock' },
-  { to: '/gastos',    icon: IconCash,    label: 'Gastos' },
-  { to: '/facturas',  icon: IconReceipt, label: 'Facturas' },
-  { to: '/pedidos',   icon: IconTruck,   label: 'Pedidos' },
+  { to: '/', icon: IconReceipt, label: 'Ventas' },
+  { to: '/gastos', icon: IconCash, label: 'Gastos' },
+  { to: '/estadisticas', icon: IconTrend, label: 'Estadísticas' },
 ]
 
 export function BottomNav() {
@@ -20,11 +24,11 @@ export function BottomNav() {
             to={to}
             end={to === '/'}
             className={({ isActive }) =>
-              `flex-1 flex flex-col items-center justify-center py-2 gap-0.5 text-[10px] font-medium transition-colors
-              ${isActive ? 'text-verde-100' : 'text-verde-200/60'}`
+              `flex-1 flex flex-col items-center justify-center py-3 gap-1 text-xs font-medium
+               transition-colors ${isActive ? 'text-white' : 'text-verde-200/70'}`
             }
           >
-            <Icon className="w-5 h-5" />
+            <Icon className="w-6 h-6" />
             {label}
           </NavLink>
         ))}
