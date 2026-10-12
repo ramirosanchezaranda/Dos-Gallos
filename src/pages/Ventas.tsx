@@ -11,7 +11,7 @@ import {
   useCompletarVenta,
   useBorrarVenta,
 } from '../hooks/useVentasMostrador'
-import { subirComprobante, BucketFaltante } from '../lib/comprobantes'
+import { subirComprobante, BucketFaltante, SinPermisoEnBucket } from '../lib/comprobantes'
 import {
   desglosarPorDia,
   pendientesDeCompletar,
@@ -57,7 +57,9 @@ export default function Ventas() {
       setAviso(
         e instanceof BucketFaltante
           ? 'Falta crear el espacio de fotos en Supabase. La venta se guarda igual, sin comprobante.'
-          : 'No se pudo subir la foto. La venta se guarda igual, sin comprobante.',
+          : e instanceof SinPermisoEnBucket
+            ? 'Al espacio de fotos le faltan los permisos en Supabase. La venta se guarda igual, sin comprobante.'
+            : 'No se pudo subir la foto. La venta se guarda igual, sin comprobante.',
       )
       return null
     } finally {

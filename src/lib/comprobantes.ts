@@ -13,10 +13,25 @@ const BUCKET = 'comprobantes'
 /** Minutos que dura la URL que se le pasa al `<img>`. */
 const MINUTOS_URL = 60
 
+/** El bucket no existe todavía. */
 export class BucketFaltante extends Error {
   constructor() {
     super('Todavía no está creado el espacio para guardar las fotos')
     this.name = 'BucketFaltante'
+  }
+}
+
+/**
+ * El bucket existe pero le faltan los permisos de escritura.
+ *
+ * `storage.objects` viene con RLS activo y sin ninguna política, así que
+ * mientras no se carguen las del bucket cualquier subida rebota. Se
+ * distingue del caso anterior porque se arregla en otro lado.
+ */
+export class SinPermisoEnBucket extends Error {
+  constructor() {
+    super('Al espacio de fotos le faltan los permisos de escritura')
+    this.name = 'SinPermisoEnBucket'
   }
 }
 
@@ -61,9 +76,12 @@ export async function subirComprobante(archivo: File): Promise<string> {
     .upload(ruta, blob, { contentType: 'image/jpeg', upsert: false })
 
   if (error) {
-    // Mientras el bucket no exista, Supabase responde "Bucket not found".
-    // Conviene distinguirlo: no es un fallo de la foto ni de la conexión.
+    // Los dos casos de configuración se distinguen del fallo de red porque
+    // no se resuelven reintentando: hay que ir a tocar Supabase.
     if (/bucket.*not.*found/i.test(error.message)) throw new BucketFaltante()
+    if (/row-level security|violates|unauthorized|403/i.test(error.message)) {
+      throw new SinPermisoEnBucket()
+    }
     throw error
   }
   return ruta
