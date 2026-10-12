@@ -48,20 +48,29 @@ export default function Ventas() {
   const ventasDeHoy = ventas.filter((v) => claveDia(v.fecha) === hoy)
   const pendientes = useMemo(() => pendientesDeCompletar(ventas), [ventas])
 
-  const subirFoto = async (archivo: File): Promise<string | null> => {
+  /**
+   * Sube la foto y, si no se pudo, devuelve el motivo en lugar de cortar.
+   *
+   * Que falle la foto no puede frenar la venta: lo que importa es que quede
+   * anotada, y el comprobante es el respaldo, no el dato.
+   */
+  const subirFoto = async (
+    archivo: File,
+  ): Promise<{ ruta: string | null; problema: string | null }> => {
     setSubiendo(true)
     setAviso(null)
     try {
-      return await subirComprobante(archivo)
+      return { ruta: await subirComprobante(archivo), problema: null }
     } catch (e) {
-      setAviso(
-        e instanceof BucketFaltante
-          ? 'Falta crear el espacio de fotos en Supabase. La venta se guarda igual, sin comprobante.'
-          : e instanceof SinPermisoEnBucket
-            ? 'Al espacio de fotos le faltan los permisos en Supabase. La venta se guarda igual, sin comprobante.'
-            : 'No se pudo subir la foto. La venta se guarda igual, sin comprobante.',
-      )
-      return null
+      return {
+        ruta: null,
+        problema:
+          e instanceof BucketFaltante
+            ? 'Falta crear el espacio de fotos en Supabase'
+            : e instanceof SinPermisoEnBucket
+              ? 'Al espacio de fotos le faltan los permisos en Supabase'
+              : 'No se pudo subir la foto',
+      }
     } finally {
       setSubiendo(false)
     }
@@ -69,10 +78,18 @@ export default function Ventas() {
 
   /** Solo la foto: para el apuro. El resto se carga después. */
   const guardarSoloFoto = async (archivo: File) => {
-    const ruta = await subirFoto(archivo)
-    if (!ruta) return
-    await guardarComprobante.mutateAsync(ruta)
-    setAviso('Foto guardada. Completala cuando puedas.')
+    const { ruta, problema } = await subirFoto(archivo)
+    try {
+      await guardarComprobante.mutateAsync(ruta)
+    } catch {
+      setAviso('No se pudo anotar la venta. Fijate si tenés señal y probá de nuevo.')
+      return
+    }
+    setAviso(
+      ruta
+        ? 'Foto guardada. Completala cuando puedas.'
+        : `${problema}. La venta quedó anotada igual: completala cuando puedas.`,
+    )
   }
 
   return (
@@ -91,8 +108,8 @@ export default function Ventas() {
                 {pendientes.length} venta{pendientes.length === 1 ? '' : 's'} sin completar
               </p>
               <p className="text-sm text-amber-800 mt-0.5">
-                Sacaste la foto hace {minutosDesde(pendientes[0].fecha)} min y todavía le falta
-                el importe.
+                {pendientes[0].ticket_url ? 'Sacaste la foto' : 'Quedó anotada'} hace{' '}
+                {minutosDesde(pendientes[0].fecha)} min y todavía le falta el importe.
               </p>
             </div>
             <div className="flex gap-2">
@@ -257,7 +274,10 @@ export default function Ventas() {
             onChange={async (e) => {
               const f = e.target.files?.[0]
               e.target.value = ''
-              if (f) setFotoNueva(await subirFoto(f))
+              if (!f) return
+              const { ruta, problema } = await subirFoto(f)
+              setFotoNueva(ruta)
+              setAviso(problema && `${problema}. La venta se guarda igual, sin comprobante.`)
             }}
           />
 
@@ -266,7 +286,12 @@ export default function Ventas() {
             idFormulario="form-venta"
             enviando={guardar.isPending}
             onGuardar={async (v) => {
-              await guardar.mutateAsync({ ...v, ticket_url: fotoNueva })
+              try {
+                await guardar.mutateAsync({ ...v, ticket_url: fotoNueva })
+              } catch {
+                setAviso('No se pudo guardar la venta. Fijate si tenés señal y probá de nuevo.')
+                return
+              }
               setFotoNueva(null)
               setPanel(null)
             }}
@@ -291,7 +316,8 @@ export default function Ventas() {
           }
         >
           <p className="text-sm text-verde-700/70">
-            Foto sacada a las {horaCorta(panel.venta.fecha)}.
+            {panel.venta.ticket_url ? 'Foto sacada' : 'Venta anotada'} a las{' '}
+            {horaCorta(panel.venta.fecha)}.
           </p>
           <FormularioVenta
             productos={productos}
@@ -303,7 +329,12 @@ export default function Ventas() {
             }}
             enviando={completar.isPending}
             onGuardar={async (v) => {
-              await completar.mutateAsync({ ...v, id: panel.venta.id, ticket_url: null })
+              try {
+                await completar.mutateAsync({ ...v, id: panel.venta.id, ticket_url: null })
+              } catch {
+                setAviso('No se pudo guardar la venta. Fijate si tenés señal y probá de nuevo.')
+                return
+              }
               setPanel(null)
             }}
           />

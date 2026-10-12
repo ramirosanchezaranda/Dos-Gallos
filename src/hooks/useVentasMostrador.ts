@@ -71,16 +71,20 @@ export function useGuardarVenta() {
 }
 
 /**
- * Guarda solo el comprobante, para completar después.
+ * Anota la venta para completar después, con la foto si se pudo subir.
  *
  * El importe arranca en cero porque la columna no admite nulo; lo que marca
  * que todavía no es una venta de verdad es `completa`, y el desglose la
  * cuenta aparte para no ensuciar el total del día.
+ *
+ * `ticket_url` puede venir en nulo: si la foto no se pudo subir igual
+ * conviene dejar anotada la venta, porque el apuro del mostrador no espera
+ * y una venta sin foto se completa, pero una que nunca se guardó se pierde.
  */
 export function useGuardarComprobante() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async (ticket_url: string): Promise<Venta> => {
+    mutationFn: async (ticket_url: string | null): Promise<Venta> => {
       const { data, error } = await supabase
         .from('ventas')
         .insert({ total: 0, ticket_url, origen: 'ocr', completa: false })
